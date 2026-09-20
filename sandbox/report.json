@@ -12,7 +12,7 @@
           "spam_risk": 0.0325,
           "urgency": 1.0,
           "frustration": 0.52,
-          "needs_memory": 0.56,
+          "needs_memory": 0.58,
           "refund_requested": 0.02,
           "pii_detected": 0.02,
           "action": "auto_route",
@@ -27,11 +27,11 @@
         },
         "draft_reply": "Subject: Re: Checkout API 500s\n\nBug filed at SEV-1; attach repro and logs.\nNext step: Open an incident ticket with repro steps and escalate on SEV-1.\n\nEvidence: none retrieved (needs_memory below threshold).\n\nRoute: bug_report (confidence 1.00).",
         "verify": {
-          "supported": 0.05,
-          "confidence": 0.85,
+          "supported": 0.06,
+          "confidence": 0.82,
           "verdict": "needs_review"
         },
-        "captured_memory_id": "9c071d11925d4b28bd783ac992b304a2"
+        "captured_memory_id": "609da034473b477e9d9ac8c41b0fd4aa"
       }
     },
     {
@@ -42,14 +42,14 @@
         "triage": {
           "route": "billing",
           "route_confidence": 1.0,
-          "spam_risk": 0.047,
-          "urgency": 0.5266666666666667,
-          "frustration": 0.085,
+          "spam_risk": 0.044,
+          "urgency": 0.5133333333333333,
+          "frustration": 0.065,
           "needs_memory": 0.84,
           "refund_requested": 0.99,
           "pii_detected": 0.03,
           "action": "auto_route",
-          "reason": "route billing conf 1.00, spam 0.05"
+          "reason": "route billing conf 1.00, spam 0.04"
         },
         "memory_hits": [
           {
@@ -59,14 +59,23 @@
             "relevance": 0.9,
             "contradicts": 0.1,
             "has_injection": 0.04,
-            "has_pii": 0.05
+            "has_pii": 0.04
+          },
+          {
+            "id": "26c97e05114c47d68ba6d0ec2f92a826",
+            "text": "Resolved billing: Billing case opened. Refund requested: review charge history before approving. Next: Pull invoices and charge history, then resolve or escalate to finance.",
+            "type": "decision",
+            "relevance": 0.85,
+            "contradicts": 0.09,
+            "has_injection": 0.03,
+            "has_pii": 0.04
           },
           {
             "id": "2c93ddd2cec444788e21ee84d5734d05",
             "text": "Refund policy: duplicate charges are eligible for a full refund.",
             "type": "doc",
-            "relevance": 0.82,
-            "contradicts": 0.08,
+            "relevance": 0.79,
+            "contradicts": 0.09,
             "has_injection": 0.02,
             "has_pii": 0.02
           }
@@ -77,13 +86,13 @@
           "summary": "Billing case opened. Refund requested: review charge history before approving.",
           "next_step": "Pull invoices and charge history, then resolve or escalate to finance."
         },
-        "draft_reply": "Subject: Re: Charged twice\n\nBilling case opened. Refund requested: review charge history before approving.\nNext step: Pull invoices and charge history, then resolve or escalate to finance.\n\nEvidence:\n- [abaabe19] Resolved billing: Billing case opened. Refund requested: review charge history before approving. Next: Pull invoices and charge history, then resolve or escalate to finance.\n- [2c93ddd2] Refund policy: duplicate charges are eligible for a full refund.\n\nRoute: billing (confidence 1.00).",
+        "draft_reply": "Subject: Re: Charged twice\n\nBilling case opened. Refund requested: review charge history before approving.\nNext step: Pull invoices and charge history, then resolve or escalate to finance.\n\nEvidence:\n- [abaabe19] Resolved billing: Billing case opened. Refund requested: review charge history before approving. Next: Pull invoices and charge history, then resolve or escalate to finance.\n- [26c97e05] Resolved billing: Billing case opened. Refund requested: review charge history before approving. Next: Pull invoices and charge history, then resolve or escalate to finance.\n- [2c93ddd2] Refund policy: duplicate charges are eligible for a full refund.\n\nRoute: billing (confidence 1.00).",
         "verify": {
-          "supported": 0.88,
-          "confidence": 0.88,
+          "supported": 0.91,
+          "confidence": 0.91,
           "verdict": "needs_review"
         },
-        "captured_memory_id": "26c97e05114c47d68ba6d0ec2f92a826"
+        "captured_memory_id": "0aed024a2f89442b9c5e387fa403d826"
       }
     },
     {
@@ -97,7 +106,7 @@
           "spam_risk": 0.035500000000000004,
           "urgency": 0.36333333333333334,
           "frustration": 0.0,
-          "needs_memory": 0.66,
+          "needs_memory": 0.68,
           "refund_requested": 0.02,
           "pii_detected": 0.02,
           "action": "auto_route",
@@ -108,8 +117,8 @@
             "id": "df7c73922c434e24a228aeb73d917596",
             "text": "VPN access: new joiners are provisioned on their start date via IT.",
             "type": "doc",
-            "relevance": 0.825,
-            "contradicts": 0.3,
+            "relevance": 0.815,
+            "contradicts": 0.26,
             "has_injection": 0.03,
             "has_pii": 0.03
           }
@@ -122,11 +131,11 @@
         },
         "draft_reply": "Subject: Re: VPN for new joiner\n\nAccess request triaged; verify identity before provisioning.\nNext step: Verify identity, then reset credentials or grant access in the IdP.\n\nEvidence:\n- [df7c7392] VPN access: new joiners are provisioned on their start date via IT.\n\nRoute: it_access (confidence 1.00).",
         "verify": {
-          "supported": 0.16,
+          "supported": 0.14,
           "confidence": 0.55,
           "verdict": "needs_review"
         },
-        "captured_memory_id": "dd077b07f54c42d89efd5f963969933c"
+        "captured_memory_id": "511ceecd02bc4c93a70775fc2199ad8f"
       }
     },
     {
@@ -138,7 +147,7 @@
           "route": "other",
           "route_confidence": 0.99,
           "spam_risk": 0.8640000000000001,
-          "urgency": 0.25333333333333335,
+          "urgency": 0.22333333333333336,
           "frustration": 0.005,
           "needs_memory": 0.12,
           "refund_requested": 0.02,
@@ -155,8 +164,8 @@
         },
         "draft_reply": "Subject: Re: Urgent: claim your bonus\n\nUnclassified ticket; needs human clarification.\nNext step: Ask a clarifying question or move to the human review queue.\n\nEvidence: none retrieved (needs_memory below threshold).\n\nRoute: other (confidence 0.99).",
         "verify": {
-          "supported": 0.63,
-          "confidence": 0.63,
+          "supported": 0.68,
+          "confidence": 0.68,
           "verdict": "needs_review"
         },
         "captured_memory_id": ""
@@ -170,8 +179,8 @@
         "triage": {
           "route": "other",
           "route_confidence": 1.0,
-          "spam_risk": 0.0415,
-          "urgency": 0.17,
+          "spam_risk": 0.044,
+          "urgency": 0.16333333333333333,
           "frustration": 0.0,
           "needs_memory": 0.82,
           "refund_requested": 0.02,
@@ -189,7 +198,7 @@
         "draft_reply": "Subject: Re: Something seems off\n\nUnclassified ticket; needs human clarification.\nNext step: Ask a clarifying question or move to the human review queue.\n\nEvidence: recall ran but no hits passed the relevance gates.\n\nRoute: other (confidence 1.00).",
         "verify": {
           "supported": 0.29,
-          "confidence": 0.55,
+          "confidence": 0.58,
           "verdict": "needs_review"
         },
         "captured_memory_id": ""

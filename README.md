@@ -67,7 +67,26 @@ with a clear message** when `TYPESAFE_API_KEY` is missing. `triage`/`ingest`
 fall back to a neutral offline mock without `?live=true`. Every response
 carries `X-Request-Id` and structured latency logs.
 
-## Production run
+## Push to GitHub + go live
+
+```bash
+cd pulsedesk-os
+git remote add origin https://github.com/<owner>/<repo>.git
+git push -u origin master
+```
+
+**UI on Vercel:** import the repo → Root Directory `frontend` →
+env `VITE_API=https://<your-api-host>` → deploy (`frontend/vercel.json`
+is included; SPA rewrites handled).
+
+**API on Render:** New → Blueprint → select repo (`render.yaml` included) →
+set `TYPESAFE_API_KEY` in the dashboard → deploy. Update
+`PULSEDESK_CORS_ORIGINS` to your Vercel domain, and point the UI's
+`VITE_API` at the Render URL.
+
+Demoing it live? Follow `DEMO.md` (5-minute script with offline fallback).
+
+## Production run (self-hosted)
 
 Segregation: one secret in `.env` (the Jev key — never git), data in the
 `pddata` volume, code in images. Per-IP rate limiting (120/min) guards the

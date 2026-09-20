@@ -1,0 +1,22 @@
+# Render blueprint: one-command backend hosting (https://render.com/docs/blueprint-spec).
+# Push this repo to GitHub, then Render → New → Blueprint → select repo.
+# Set TYPESAFE_API_KEY in the Render dashboard (never commit it).
+services:
+  - type: web
+    name: pulsedesk-api
+    runtime: python
+    buildCommand: pip install fastapi uvicorn pydantic pyyaml typesafe-sdk fastmcp
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 2
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: TYPESAFE_API_KEY
+        sync: false
+      - key: MEMORY_DB
+        value: /data/memory.db
+      - key: PULSEDESK_CORS_ORIGINS
+        value: https://pulsedesk-os.vercel.app
+    disk:
+      name: pddata
+      mountPath: /data
+      sizeGB: 1
