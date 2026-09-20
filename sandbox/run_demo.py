@@ -66,11 +66,17 @@ TICKETS = [
 
 
 def post(path: str, payload: dict) -> dict:
-    """POST JSON and return the decoded body."""
+    """POST JSON and return the decoded body (with API key when set)."""
+    import os
+
+    headers = {"Content-Type": "application/json"}
+    api_key = os.environ.get("PULSEDESK_API_KEY", "")
+    if api_key:
+        headers["X-API-Key"] = api_key
     req = urllib.request.Request(
         API + path,
         data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=120) as res:

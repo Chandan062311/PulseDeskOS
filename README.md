@@ -60,11 +60,18 @@ Without `?live=true`, triage/ingest fall back to a neutral offline mock
 
 ## Production run
 
+Segregation: secrets in `.env` (never git), data in the `pddata` volume,
+code in images. `/healthz` is open for probes; everything else needs
+`X-API-Key: $PULSEDESK_API_KEY` (leave empty only for local dev).
+
 ```bash
-cp .env.example .env  # set TYPESAFE_API_KEY, optionally MEMORY_DB
-docker build -t pulsedesk-os .
-docker run -p 8000:8000 --env-file .env -v pddata:/data pulsedesk-os
-# or: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+cp .env.example .env  # set TYPESAFE_API_KEY + PULSEDESK_API_KEY
+docker compose up --build -d   # api :8000 (4 workers, WAL sqlite) + ui :8080
+./scripts/smoke.sh             # with PULSEDESK_API_KEY exported
+./scripts/backup.sh ./backups  # online snapshot via MEMORY_DB
+docker build -t pulsedesk-os:1.0 .            # verified 216MB
+docker build -t pulsedesk-ui:1.0 ./frontend   # verified 63MB
+# or: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 CI (`.github/workflows/ci.yml`) runs `ruff check`, `mypy backend`
