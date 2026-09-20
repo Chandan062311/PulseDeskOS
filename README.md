@@ -59,7 +59,7 @@ Base: `http://localhost:8000`. All contracts are frozen Pydantic models in
 | POST   | `/v1/memory/recall`| query              | `list[MemoryHit]`   | BM25 shortlist + Jev rerank (Req2)           |
 | GET    | `/v1/memory/list`  | `?tenant_id=&limit=` | `[{id,text,type}]` | Newest-first tenant memories                 |
 | GET    | `/v1/memory/count` | `?tenant_id=`       | `{count}`           | Tenant memory size                           |
-| DELETE | `/v1/memory/{id}`  | `?tenant_id=` (optional) | `{deleted}`   | Delete by id, tenant-scoped when given       |
+| DELETE | `/v1/memory/{id}`  | `?tenant_id=` (required) | `{deleted}`   | Delete by id, tenant-scoped (mismatch → false) |
 | POST   | `/v1/verify`       | draft + evidence   | `VerifyResult`      | Support verdict for a draft reply            |
 
 Live Jev routes (`orchestrate`, `memory/recall`, `verify`) return **503
@@ -69,10 +69,12 @@ carries `X-Request-Id` and structured latency logs.
 
 ## Push to GitHub + go live
 
+Already live at **https://github.com/Chandan062311/PulseDeskOS** (`master`).
+To push new commits:
+
 ```bash
 cd pulsedesk-os
-git remote add origin https://github.com/<owner>/<repo>.git
-git push -u origin master
+git push origin master
 ```
 
 **UI on Vercel:** import the repo → Root Directory `frontend` →
@@ -122,13 +124,12 @@ agents/reviewer.md           # review-queue worker agent
 .mcp.json                    # bundled MCP (5 tools: triage, recall, add, list, verify)
 ```
 
-Test locally, install from a marketplace once pushed to GitHub
-(`<owner>/<repo>` below = this repo's GitHub path):
+Test locally, install from the marketplace:
 
 ```bash
 claude --plugin-dir .                              # try it: /pulsedesk:triage …
 claude plugin validate .                           # ✔ Validation passed
-/plugin marketplace add <owner>/<repo>             # in Claude Code
+/plugin marketplace add Chandan062311/PulseDeskOS  # in Claude Code
 /plugin install pulsedesk@pulsedesk-marketplace
 ```
 
@@ -199,7 +200,7 @@ pulsedesk-os/
   agents/              # reviewer agent
   .claude-plugin/      # plugin manifest (name: pulsedesk)
   .mcp.json            # bundled MCP server config
-  sandbox/             # demo + brutal sweep findings + reports
+  sandbox/             # demo runner + audit reports (REPORT.md, REPORT_V2.md)
   tests/               # pytest suite
 ```
 
