@@ -76,14 +76,16 @@ def test_offline_skips_recall_when_needs_memory_low() -> None:
         TICKET, _triage(0.1), HANDLER, CANDIDATES, SCORES, "supported", 0.1, CONFIG
     )
     assert res.memory_hits == ()
-    assert "none retrieved" in res.draft_reply
+    assert "below threshold" in res.draft_reply
 
 
 def test_draft_without_evidence_is_honest() -> None:
     triage = _triage(0.1)
     draft = build_draft_reply(TICKET, triage, HANDLER, [])
-    assert "none retrieved" in draft
+    assert "no hits passed the relevance gates" in draft
     assert "Refund duplicate." in draft
+    skipped = build_draft_reply(TICKET, triage, HANDLER, [], recalled=False)
+    assert "below threshold" in skipped
 
 
 def test_seed_is_idempotent() -> None:
@@ -141,7 +143,9 @@ def test_memory_crud_endpoints(monkeypatch) -> None:
         assert client.get("/v1/memory/count", params={"tenant_id": "t"}).json() == {"count": 1}
         rows = client.get("/v1/memory/list", params={"tenant_id": "t"}).json()
         assert rows[0]["text"] == "Refund policy doc"
-        assert client.delete(f"/v1/memory/{stored['id']}").json() == {"deleted": True}
+        assert client.delete(f"/v1/memory/{stored['id']}", params={"tenant_id": "t"}).json() == {
+            "deleted": True
+        }
         assert client.get("/v1/memory/count", params={"tenant_id": "t"}).json() == {"count": 0}
     finally:
         backend.close()
@@ -294,3 +298,42 @@ def test_auth_open_without_env(monkeypatch) -> None:
     client = TestClient(main_mod.app)
     res = client.post("/v1/triage", json={"ticket": {"subject": "s", "message": "m"}})
     assert res.status_code == 200
+
+
+def test_delete_requires_tenant(monkeypatch) -> None:
+    """Tenant scoping is mandatory on delete (no unscoped fallback)."""
+    from fastapi.testclient import TestClient
+
+    import backend.main as main_mod
+    from backend.memory_backends.sqlite import SqliteMemoryBackend
+
+    backend = SqliteMemoryBackend(":memory:")
+    monkeypatch.setattr(main_mod, "memory_backend", lambda: backend)
+    try:
+        client = TestClient(main_mod.app)
+        mem_id = client.post(
+            "/v1/memory/store", json={"tenant_id": "t", "text": "x", "type": "doc"}
+        ).json()["id"]
+        assert client.delete(f"/v1/memory/{mem_id}").status_code == 422
+        assert client.delete(f"/v1/memory/{mem_id}", params={"tenant_id": ""}).status_code == 422
+        assert backend.count("t") == 1
+    finally:
+        backend.close()
+
+
+def test_rate_limit_429_with_retry_after(monkeypatch) -> None:
+    """Excess requests get 429 + Retry-After instead of silent slowdown."""
+    from fastapi.testclient import TestClient
+
+    import backend.main as main_mod
+
+    monkeypatch.setenv("PULSEDESK_RATE_LIMIT", "2")
+    main_mod._rate_hits.clear()
+    client = TestClient(main_mod.app)
+    body = {"ticket": {"subject": "s", "message": "m"}}
+    assert client.post("/v1/triage", json=body).status_code == 200
+    assert client.post("/v1/triage", json=body).status_code == 200
+    limited = client.post("/v1/triage", json=body)
+    assert limited.status_code == 429
+    assert limited.headers.get("retry-after") == "60"
+    main_mod._rate_hits.clear()

@@ -116,7 +116,7 @@ Verification status (per `sandbox/report.md`, `sandbox/brutal/REPORT.md`):
   vague → `other/human_review`).
 - Brutal sweep: 4 adversarial agents, 60+ cases, **0 crashes**
   (no 500 on any bad input).
-- Post-repair per `sandbox/brutal/REPORT.md`: 40 pytest passed, `ruff` +
+- Post-repair per `sandbox/brutal/REPORT.md` + `REPORT_V2.md`: 55 pytest passed, `ruff` +
   format + `mypy` (strict) clean, `claude plugin validate` ✔, live goldens
   14/14 joint (incl. 2 new hr_policy), sandbox problem statement 5/5 with
   exit 0, UI 200, API ok. No other pass counts are claimed here.

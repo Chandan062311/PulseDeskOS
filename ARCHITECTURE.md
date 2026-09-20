@@ -24,10 +24,10 @@ flowchart TD
 
 | Component | File | Role |
 |---|---|---|
-| Contracts | `backend/schemas.py` | Frozen Pydantic models: `Ticket`, `TriageResult`, `MemoryHit`, `VerifyResult`, `HandlerResult`. Single source of truth. |
+| Contracts | `backend/schemas.py` (domain) + request/response models in `backend/main.py` | Frozen Pydantic models: `Ticket`, `TriageResult`, `MemoryHit`, `VerifyResult`, `HandlerResult`. Single source of truth per layer. |
+| Handlers | `backend/handlers/builtins.py` | 5 handler classes (one per route), registered by side effect. Extend with new files, never branch core triage. |
 | Jev client | `backend/jev_client.py` | Sole entry point for System One requests. Builds `{state, questions}` payloads, reads model/timeout from `config.yaml`, requires `TYPESAFE_API_KEY`. |
-| Registry | `backend/registry.py` | `HANDLERS` dict + `register()`. `Handler` protocol (`can_handle`, `run`). `MemoryBackend` protocol (`store`, `search_bm25`). |
-| Handlers | `backend/handlers/` | One file per `Route` (`it_access`, `bug_report`, `billing`, `hr_policy`, `other`). Deterministic work only, no Jev calls directly. |
+| Registry | `backend/registry.py` | `HANDLERS` dict + `register()`. `Handler` protocol (`can_handle`, `run`). `MemoryBackend` protocol (`store`, `search_bm25`, `list`, `delete`, `count`). |
 | Memory backends | `backend/memory_backends/` | Pluggable store. SQLite now, Postgres/supermemory later. Lexical `search_bm25`, Jev reranks afterwards. |
 | HTTP API | `backend/main.py` | FastAPI app: `/healthz`, `/v1/triage`, `/v1/ingest`, `/v1/orchestrate`, `/v1/memory/*`, `/v1/verify`. Request-id middleware, 503 on missing key. |
 | Orchestrator | `backend/orchestrator.py` | Additive chain: `orchestrate_live` (triage→conditional recall→dispatch→draft→verify), pure `orchestrate_offline`, idempotent `seed_default_docs`. |

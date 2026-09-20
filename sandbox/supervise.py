@@ -12,14 +12,15 @@ import sys
 
 sys.path.insert(0, "pulsedesk-os")
 
-for line in open("pulsedesk-os/.env", encoding="utf-8"):
-    line = line.strip()
-    if line.startswith("TYPESAFE_API_KEY=") and "your-key" not in line:
-        os.environ["TYPESAFE_API_KEY"] = line.split("=", 1)[1].strip().strip('"')
+with open("pulsedesk-os/.env", encoding="utf-8") as _env_file:
+    for line in _env_file:
+        line = line.strip()
+        if line.startswith("TYPESAFE_API_KEY=") and "your-key" not in line:
+            os.environ["TYPESAFE_API_KEY"] = line.split("=", 1)[1].strip().strip('"')
 
-from backend.orchestration.router import route_live  # noqa: E402
-from backend.orchestration.schemas import SubTask  # noqa: E402
-from backend.orchestration.trace import TraceLogger  # noqa: E402
+from backend.orchestration.router import route_live
+from backend.orchestration.schemas import SubTask
+from backend.orchestration.trace import TraceLogger
 
 SUBTASKS = [
     SubTask(

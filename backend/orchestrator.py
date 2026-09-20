@@ -74,6 +74,7 @@ def build_draft_reply(
     triage: TriageResult,
     handler: HandlerResult,
     memory_hits: list[MemoryHit],
+    recalled: bool = True,
 ) -> str:
     """Build a deterministic draft reply from handler output + evidence.
 
@@ -86,6 +87,8 @@ def build_draft_reply(
         triage: Composed triage result.
         handler: Dispatched handler output.
         memory_hits: Reranked evidence (may be empty).
+        recalled: Whether the recall stage ran. Distinguishes "recall ran
+            but nothing passed the gates" from "recall never ran".
 
     Returns:
         Plain-text draft reply with evidence citations.
@@ -101,6 +104,9 @@ def build_draft_reply(
         lines.append("Evidence:")
         for hit in memory_hits:
             lines.append(f"- [{hit.id[:8]}] {hit.text}")
+    elif recalled:
+        lines.append("")
+        lines.append("Evidence: recall ran but no hits passed the relevance gates.")
     else:
         lines.append("")
         lines.append("Evidence: none retrieved (needs_memory below threshold).")
@@ -139,9 +145,10 @@ def orchestrate_offline(
     """
     cfg = config or {}
     threshold, max_hits = orchestration_thresholds(cfg)
-    hits = compose_recall(candidates, scores, cfg) if triage.needs_memory >= threshold else []
+    recalled = triage.needs_memory >= threshold
+    hits = compose_recall(candidates, scores, cfg) if recalled else []
     hits = hits[:max_hits]
-    draft = build_draft_reply(ticket, triage, handler, hits)
+    draft = build_draft_reply(ticket, triage, handler, hits, recalled)
     verify = compose_verify(verify_choice, verify_needs_review)
     return OrchestrateResponse(
         triage=triage,
@@ -182,10 +189,11 @@ async def orchestrate_live(
     triage = await triage_live(ticket, customer, config_path)
     threshold, max_hits = orchestration_thresholds(config)
     hits: list[MemoryHit] = []
-    if triage.needs_memory >= threshold:
+    recalled = triage.needs_memory >= threshold
+    if recalled:
         hits = (await recall_live(tenant_id, ticket.message, backend, config_path))[:max_hits]
     handler = handler_resolver(ticket, triage)
-    draft = build_draft_reply(ticket, triage, handler, hits)
+    draft = build_draft_reply(ticket, triage, handler, hits, recalled)
     evidence = "\n".join(hit.text for hit in hits) or "No retrieved evidence."
     verify: VerifyResult = await verify_live(draft, evidence, config_path)
     return OrchestrateResponse(

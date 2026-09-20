@@ -10,11 +10,14 @@ Endpoints:
 
 from __future__ import annotations
 
+import hmac
 import logging
 import os
+import threading
 import time
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from typing import Literal
 
@@ -45,7 +48,23 @@ from .verify import verify_live
 logger = logging.getLogger("pulsedesk")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-app = FastAPI(title="PulseDesk OS")
+
+def log_auth_mode() -> None:
+    """Log once whether the API gate is enforced (call at startup)."""
+    if os.environ.get("PULSEDESK_API_KEY"):
+        logger.info("auth enforced (PULSEDESK_API_KEY set)")
+    else:
+        logger.warning("auth DISABLED: PULSEDESK_API_KEY unset — local dev mode only")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Startup hook: report the auth posture exactly once."""
+    log_auth_mode()
+    yield
+
+
+app = FastAPI(title="PulseDesk OS", lifespan=lifespan)
 
 
 class TriageRequest(Frozen):
@@ -114,17 +133,55 @@ async def api_key_middleware(
 ) -> Response:
     """API-key gate for everything except the liveness probe.
 
-    Key from ``PULSEDESK_API_KEY`` via the ``X-API-Key`` header. When the env
-    var is unset, auth is disabled (local dev) — tests and offline demos rely
-    on this. Secrets never touch code or git.
+    Key from ``PULSEDESK_API_KEY`` via the ``X-API-Key`` header, compared in
+    constant time. When the env var is unset, auth is disabled (local dev) —
+    tests and offline demos rely on this; the open mode is logged loudly at
+    startup (see ``log_auth_mode``). Secrets never touch code or git.
     """
     if request.url.path == "/healthz":
         return await call_next(request)
     expected = os.environ.get("PULSEDESK_API_KEY", "")
     if not expected:
         return await call_next(request)
-    if request.headers.get("x-api-key", "") != expected:
+    presented = request.headers.get("x-api-key", "")
+    if not hmac.compare_digest(presented, expected):
         return JSONResponse(status_code=401, content={"detail": "Invalid or missing API key."})  # type: ignore[return-value]
+    return await call_next(request)
+
+
+_RATE_WINDOW_S = 60.0
+_rate_hits: dict[str, list[float]] = {}
+_rate_lock = threading.Lock()
+
+
+def _rate_limit_per_minute() -> int:
+    """Reads ``PULSEDESK_RATE_LIMIT`` per call so tests can retune it."""
+    try:
+        return max(int(os.environ.get("PULSEDESK_RATE_LIMIT", "120")), 1)
+    except ValueError:
+        return 120
+
+
+@app.middleware("http")
+async def rate_limit_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    """Sliding-window rate limit per client IP. 429 with Retry-After on excess."""
+    if request.url.path == "/healthz":
+        return await call_next(request)
+    limit = _rate_limit_per_minute()
+    client = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    with _rate_lock:
+        hits = [t for t in _rate_hits.get(client, []) if now - t < _RATE_WINDOW_S]
+        if len(hits) >= limit:
+            return JSONResponse(  # type: ignore[return-value]
+                status_code=429,
+                content={"detail": "Rate limit exceeded. Slow down and retry."},
+                headers={"Retry-After": "60"},
+            )
+        hits.append(now)
+        _rate_hits[client] = hits
     return await call_next(request)
 
 
@@ -259,12 +316,14 @@ def v1_memory_list(tenant_id: str = "default", limit: int = 20) -> list[dict[str
 
 
 @app.delete("/v1/memory/{mem_id}")
-def v1_memory_delete(mem_id: str, tenant_id: str | None = None) -> dict[str, bool]:
-    """Delete one memory by id.
+def v1_memory_delete(mem_id: str, tenant_id: str) -> dict[str, bool]:
+    """Delete one memory by id within a tenant (required).
 
-    When ``tenant_id`` is given, the id must belong to that tenant;
-    cross-tenant deletes report ``deleted: false`` like a missing id.
+    Tenant scoping is mandatory: without it, bare ids were a cross-tenant
+    deletion oracle. Mismatches report ``deleted: false`` like a missing id.
     """
+    if not tenant_id.strip():
+        raise HTTPException(status_code=422, detail="tenant_id must be non-empty.")
     return {"deleted": memory_backend().delete(mem_id, tenant_id)}
 
 

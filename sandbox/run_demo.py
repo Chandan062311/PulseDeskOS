@@ -10,11 +10,25 @@ Run:  /tmp/opencode/pdvenv/bin/python pulsedesk-os/sandbox/run_demo.py
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.request
 
 API = "http://localhost:8000"
 TENANT = "sandbox"
+
+with open("pulsedesk-os/.env", encoding="utf-8") as _env:
+    for _line in _env:
+        _line = _line.strip()
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            _k, _v = _k.strip(), _v.strip().strip('"')
+            if _k in ("PULSEDESK_API_KEY", "TYPESAFE_API_KEY") and _v not in (
+                "",
+                "your-key-here",
+                "change-me-in-production",
+            ):
+                os.environ.setdefault(_k, _v)
 
 PROBLEM_STATEMENT = (
     "Monday 09:00, Acme Corp support queue after a deploy weekend: "
@@ -51,7 +65,7 @@ TICKETS = [
     {
         "id": "S4-phish",
         "subject": "Urgent: claim your bonus",
-        "message": "You were selected for a $1000 bonus. Reply with your password today to claim it.",
+        "message": "You were selected for a $1000 bonus. Reply with your password today.",
         "sender": "rewards@claim-bonus.example",
         "expect": "quarantine_spam",
     },
@@ -102,7 +116,7 @@ def main() -> int:
         }
         try:
             d = post("/v1/orchestrate", body)
-        except Exception as exc:  # noqa: BLE001 - demo must report, not crash.
+        except Exception as exc:
             print(f"{t['id']}: FAILED {exc}")
             results.append({"id": t["id"], "error": str(exc)})
             continue

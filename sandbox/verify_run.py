@@ -9,15 +9,16 @@ import sys
 
 sys.path.insert(0, "pulsedesk-os")
 
-for line in open("pulsedesk-os/.env", encoding="utf-8"):
-    line = line.strip()
-    if line.startswith("TYPESAFE_API_KEY=") and "your-key" not in line:
-        os.environ["TYPESAFE_API_KEY"] = line.split("=", 1)[1].strip().strip('"')
+with open("pulsedesk-os/.env", encoding="utf-8") as _env_file:
+    for line in _env_file:
+        line = line.strip()
+        if line.startswith("TYPESAFE_API_KEY=") and "your-key" not in line:
+            os.environ["TYPESAFE_API_KEY"] = line.split("=", 1)[1].strip().strip('"')
 
-from backend.orchestration.schemas import WorkerResult  # noqa: E402
-from backend.orchestration.trace import TraceLogger  # noqa: E402
-from backend.orchestration.verifier import verify_live  # noqa: E402
-from sandbox.supervise import SUBTASKS  # noqa: E402
+from backend.orchestration.schemas import WorkerResult
+from backend.orchestration.trace import TraceLogger
+from backend.orchestration.verifier import verify_live
+from sandbox.supervise import SUBTASKS
 
 SOURCES = {
     "R1-benchmark": ["pulsedesk-os/sandbox/agent-run/R1-benchmark.md"],
@@ -25,14 +26,25 @@ SOURCES = {
     "R3-docs": ["pulsedesk-os/sandbox/agent-run/R3-docs.md"],
     "R4-release": ["pulsedesk-os/RELEASE_v1.md", "pulsedesk-os/CHANGELOG.md"],
 }
-WORKERS = {"R1-benchmark": "scout", "R2-security": "scout", "R3-docs": "scout", "R4-release": "scribe"}
+WORKERS = {
+    "R1-benchmark": "scout",
+    "R2-security": "scout",
+    "R3-docs": "scout",
+    "R4-release": "scribe",
+}
 
 
-async def main() -> None:
+def _read(path: str) -> str:
+    """Read a text file (sandbox helper with proper file handling)."""
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+async def _main() -> None:
     trace = TraceLogger("pulsedesk-os/sandbox/agent-run/trace.jsonl")
     verdicts = []
     for sub in SUBTASKS:
-        output = "\n\n".join(open(p, encoding="utf-8").read() for p in SOURCES[sub.id])
+        output = "\n\n".join(_read(p) for p in SOURCES[sub.id])
         result = WorkerResult(subtask_id=sub.id, worker=WORKERS[sub.id], output=output)  # type: ignore[arg-type]
         verdict = await verify_live(result, list(sub.acceptance))
         verdicts.append(verdict.model_dump())
@@ -52,4 +64,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(_main())

@@ -52,11 +52,10 @@ Base: `http://localhost:8000`. All contracts are frozen Pydantic models in
 | DELETE | `/v1/memory/{id}`  | `?tenant_id=` (optional) | `{deleted}`   | Delete by id, tenant-scoped when given       |
 | POST   | `/v1/verify`       | draft + evidence   | `VerifyResult`      | Support verdict for a draft reply            |
 
-Live Jev routes (`orchestrate`, `memory/recall`, `verify`, `triage?live=true`)
-return **503 with a clear message** when `TYPESAFE_API_KEY` is missing.
-Without `?live=true`, triage/ingest fall back to a neutral offline mock
-(`other/human_review`) for demos. Every response carries
-`X-Request-Id` and structured latency logs.
+Live Jev routes (`orchestrate`, `memory/recall`, `verify`) return **503
+with a clear message** when `TYPESAFE_API_KEY` is missing. `triage`/`ingest`
+fall back to a neutral offline mock without `?live=true`. Every response
+carries `X-Request-Id` and structured latency logs.
 
 ## Production run
 
@@ -147,7 +146,7 @@ pulsedesk-os/
     schemas.py         # frozen contracts (single source of truth)
     registry.py        # Handler / MemoryBackend registries + register()
     jev_client.py      # all Jev calls go through here
-    handlers/          # one file per route (it_access, bug_report, ...)
+    handlers/          # builtins.py: 5 handlers (extend with new files)
     memory_backends/   # SQLite now, Postgres/supermemory later
     main.py            # FastAPI app: triage/ingest/orchestrate/memory/verify
     mcp_server.py      # FastMCP tools (triage/recall/add/list/verify)
@@ -172,7 +171,8 @@ pulsedesk-os/
 
 - Add a handler = new file under `backend/handlers/` + `register()` it.
   Never edit triage core to add a route.
-- Change shapes in `backend/schemas.py` + bump the `/v1` API version.
+- Change shapes in `backend/schemas.py` (domain contracts) or the
+  request/response models in `backend/main.py` + bump the `/v1` API version.
   Never use ad-hoc dicts across handler boundaries.
 - Tune behavior in `config.yaml`, not in code.
 - All Jev calls go through `backend/jev_client.py`.

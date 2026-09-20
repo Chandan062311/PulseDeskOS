@@ -40,8 +40,8 @@ Full per-agent logs: `brutal/triage.md`, `brutal/memory.md`,
 - Dropped-candidate reason codes in recall responses.
 - Backend audit log as review-queue source of truth (UI uses session state).
 
-## Post-repair verification
+## Post-repair verification (2026-09-20; re-verified post-v2-audit — see REPORT_V2.md)
 
-- 40 pytest passed · ruff + format + mypy strict clean · `claude plugin validate` ✔
+- 55 pytest passed · ruff + format + mypy strict clean · `claude plugin validate` ✔
 - Live goldens 14/14 joint (incl. 2 new hr_policy) with 9-question battery, no drift
 - Sandbox problem statement 5/5, exit 0 · UI 200 · API ok
