@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 
 def load_config(path: str = "config.yaml") -> dict[str, Any]:

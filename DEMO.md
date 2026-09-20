@@ -22,8 +22,8 @@ its math instead of hiding it.
 > "Now someone tries to rob us."
 
 Load the bonus/OTP message → **Triage live**: `quarantine_spam`, spam 0.86.
-It never reaches a handler or a customer. Mention the 60+ adversarial cases
-in `sandbox/brutal/` with zero crashes.
+It never reaches a handler or a customer. The same gates are covered by the
+regression suite in `tests/`.
 
 ## Act 3 — The pipeline (2 min): the whole product in one call
 
@@ -35,8 +35,8 @@ traces to evidence.
 ## Closer (30s)
 
 > "Code owns the workflow, Jev supplies the judgments — 9 questions,
-> ~1 second, every number shown. Star it, clone it, `make setup` and break it:
-> `sandbox/brutal/` tells you exactly how we tried."
+> every decision visible. Star it, clone it, run `make setup`, and inspect the
+> regression suite in `tests/`."
 
 ## If asked…
 

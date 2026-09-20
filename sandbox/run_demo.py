@@ -4,7 +4,7 @@ Five tickets covering every route + spam + ambiguity, run through the full
 live pipeline (triage -> recall -> dispatch -> verify). Uses tenant
 "sandbox" on a fresh DB so the production store is untouched.
 
-Run:  /tmp/opencode/pdvenv/bin/python pulsedesk-os/sandbox/run_demo.py
+Run:  python sandbox/run_demo.py
 """
 
 from __future__ import annotations
@@ -13,18 +13,21 @@ import json
 import os
 import sys
 import urllib.request
+from pathlib import Path
 
 API = "http://localhost:8000"
 TENANT = "sandbox"
-
-with open("pulsedesk-os/.env", encoding="utf-8") as _env:
-    for _line in _env:
-        _line = _line.strip()
-        if "=" in _line and not _line.startswith("#"):
-            _k, _v = _line.split("=", 1)
-            _k, _v = _k.strip(), _v.strip().strip('"')
-            if _k == "TYPESAFE_API_KEY" and _v not in ("", "your-key-here"):
-                os.environ.setdefault(_k, _v)
+ROOT = Path(__file__).resolve().parents[1]
+env_path = ROOT / ".env"
+if env_path.is_file():
+    with env_path.open(encoding="utf-8") as _env:
+        for _line in _env:
+            _line = _line.strip()
+            if "=" in _line and not _line.startswith("#"):
+                _k, _v = _line.split("=", 1)
+                _k, _v = _k.strip(), _v.strip().strip('"')
+                if _k == "TYPESAFE_API_KEY" and _v not in ("", "your-key-here"):
+                    os.environ.setdefault(_k, _v)
 
 PROBLEM_STATEMENT = (
     "Monday 09:00, Acme Corp support queue after a deploy weekend: "
@@ -123,9 +126,9 @@ def main() -> int:
         results.append({"id": t["id"], "expect": t["expect"], "got": got, "full": d})
     review = [r for r in results if "full" in r and r["full"]["triage"]["action"] != "auto_route"]
     print(f"\nReview queue: {len(review)} item(s): " + ", ".join(r["id"] for r in review))
-    with open("pulsedesk-os/sandbox/report.json", "w", encoding="utf-8") as f:
+    with (ROOT / "sandbox/report.json").open("w", encoding="utf-8") as f:
         json.dump({"problem": PROBLEM_STATEMENT, "results": results}, f, indent=2)
-    print("Report: pulsedesk-os/sandbox/report.json")
+    print("Report: sandbox/report.json")
     return 0 if all(r.get("expect", "") in r.get("got", "") for r in results) else 1
 
 

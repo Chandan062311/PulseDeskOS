@@ -35,7 +35,7 @@ export default function SystemPanel({ health }: { health: string }) {
             <span className={`dot ${jev === "live" ? "" : "down"}`} aria-hidden="true" /> {jev}
             {jev === "offline" && (
               <span className="muted">
-                {" "}— put your key in <code>pulsedesk-os/.env</code> as
+                {" "}— put your key in <code>.env</code> as
                 <code>TYPESAFE_API_KEY=…</code> (from console.typesafe.ai/keys)
                 and restart the API. Triage still works offline (mock mode).
               </span>
@@ -65,7 +65,7 @@ export default function SystemPanel({ health }: { health: string }) {
           </tbody>
         </table>
         <p className="muted">
-          Full docs: <code>/docs</code> on the backend. Open-source repo: <code>pulsedesk-os/</code>.
+          Full docs: <code>/docs</code> on the backend. Source: <code>backend/</code> in this repository.
         </p>
       </Section>
     </div>

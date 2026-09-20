@@ -30,6 +30,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.mypy]
 python_version = "3.11"
+files = ["backend"]
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -41,3 +42,6 @@ pythonpath = ["."]
 
 [build-system]
 requires = ["setuptools"]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]

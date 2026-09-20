@@ -1,220 +1,261 @@
 # PulseDesk OS
 
-Enterprise productivity orchestrator powered by TypeSafe Jev (System One).
+[![CI](https://github.com/Chandan062311/PulseDeskOS/actions/workflows/ci.yml/badge.svg)](https://github.com/Chandan062311/PulseDeskOS/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Node 22+](https://img.shields.io/badge/node-22+-green.svg)](https://nodejs.org/)
+[![TypeSafe Jev](https://img.shields.io/badge/TypeSafe-Jev%20Inside-purple.svg)](https://typesafe.ai/)
+[![Docker Ready](https://img.shields.io/badge/docker-ready-2496ED.svg?logo=docker&logoColor=white)](docker-compose.yml)
 
-## 60-second start (one key, one file)
+An open-source, auditable support operations console and multi-agent orchestrator powered by [TypeSafe Jev](https://typesafe.ai/).
 
-1. Get a key at **https://console.typesafe.ai/keys**.
-2. Put it in **`pulsedesk-os/.env`** as `TYPESAFE_API_KEY=…` (copy from
-   `.env.example`). This is the ONLY key the app needs.
-3. `make api` (or `uvicorn backend.main:app --port 8000`), then open the
-   System tab in the UI — it shows **Jev: live** when the key works.
-4. No key? Everything still runs: triage uses an offline mock, live routes
-   answer 503 telling you exactly what's missing.
+PulseDesk turns incoming support tickets into typed judgments, deterministic policy gates, memory-backed actions, and verified customer replies.
 
-## Vision
+> **Core Philosophy:** Code owns the workflow. Jev owns the judgments.
 
-Code owns the workflow. Jev owns the judgments.
+---
 
-PulseDesk routes support tickets deterministically: plain Python composes gates,
-thresholds, and handler dispatch. All probabilistic decisions (triage, memory
-relevance, verification) are delegated to TypeSafe Jev System One requests that
-return typed probabilities. No ad-hoc heuristics in handlers, no LLM string
-parsing in core logic.
+## Why PulseDesk OS?
 
-- Req1 (triage): one Jev call answers 9 questions per ticket — route, route
-  confidence, spam risk, urgency, frustration, needs-memory, refund-requested,
-  pii-detected, plus supporting rationale.
-- Req2 (memory): BM25 shortlist from a pluggable store, Jev reranks for
-  relevance / contradiction / injection / PII.
-- Verify: Jev judges whether a draft reply is supported by cited evidence.
+Most agent architectures let large language models decide what step to run next, hoping an open-ended prompt will not hallucinate, loop infinitely, or leak customer data.
 
-## Quickstart
+**PulseDesk OS inverts that paradigm:**
+
+1. **Deterministic Control Flow in Code:** State machines, branching, routing gates, and handler dispatching are written in standard, testable Python.
+2. **Narrow, Structured Judgments via Jev:** Fast (~1s), typed System One models evaluate specific questions (route classification, spam probability, urgency, PII presence, memory relevance, response verification).
+3. **Transparent & Auditable:** Every decision carries explicit confidence scores, decision gates, and verifiable reasoning instead of hidden LLM scratchpads.
+4. **Offline First:** Runs out of the box with mock heuristics for offline development—no API key required to test the core pipeline. Adding `TYPESAFE_API_KEY` unlocks live production judgments.
+
+---
+
+## Architecture & Data Flow
+
+```mermaid
+flowchart TD
+    A[Incoming Ticket] --> B[FastAPI /v1/orchestrate]
+    B --> C[TypeSafe Jev Triage\n9 Structured Judgments]
+    C --> D{Config Threshold Gates}
+    
+    D -->|Spam Risk >= 0.60| E[Quarantine Spam]
+    D -->|Conf < 0.75 / Borderline / Other| F[Human Review Queue]
+    D -->|High Confidence Route| G[Handler Registry Dispatch]
+    
+    G --> H{Needs Memory? >= 0.60}
+    H -->|No| I[Draft Response]
+    H -->|Yes| J[SQLite BM25 Search]
+    J --> K[Jev Semantic Rerank &\nPrompt Injection Filter]
+    K --> I
+    
+    I --> L[Jev Evidence Verification Gate]
+    L -->|Verified| M[Auto Dispatch Reply]
+    L -->|Needs Review| F
+```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for full component specifications, data schemas, and extension patterns.
+
+---
+
+## Quickstart (Under 60 Seconds)
+
+### Option A: Docker Compose (Full Stack)
+
+Run the backend API and the production React console with persistent SQLite storage:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+git clone https://github.com/Chandan062311/PulseDeskOS.git
+cd PulseDeskOS
+
+# Optionally set TYPESAFE_API_KEY in .env for live Jev calls
 cp .env.example .env
-# Edit .env and set TYPESAFE_API_KEY (get one at https://console.typesafe.ai/keys)
-uvicorn backend.main:app --reload
-pytest
+
+docker compose up --build -d
 ```
 
-Requires Python >= 3.11.
+- **Operations Console (UI):** [http://localhost:8080](http://localhost:8080)
+- **FastAPI REST API & Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Liveness Probe:** `curl http://localhost:8000/healthz`
 
-## API
+### Option B: Local Development
 
-Base: `http://localhost:8000`. All contracts are frozen Pydantic models in
-`backend/schemas.py`.
-
-| Method | Path               | Input              | Output              | Description                                  |
-|--------|--------------------|--------------------|---------------------|----------------------------------------------|
-| GET    | `/healthz`         | —                  | `{"status":"ok"}`   | Liveness check                               |
-| POST   | `/v1/triage`       | `Ticket`           | `TriageResult`      | Req1: Jev 9-question triage + gated action   |
-| POST   | `/v1/ingest`       | `Ticket`           | `IngestResponse`    | Triage, then registry dispatch               |
-| POST   | `/v1/orchestrate`  | ticket+tenant      | `OrchestrateResponse` | Full pipeline: triage→recall→dispatch→verify |
-| POST   | `/v1/memory/store` | text               | `{id}`              | Store a tenant memory doc                    |
-| POST   | `/v1/memory/seed`  | `?tenant_id=`      | `{seeded}`          | Idempotent default policy docs               |
-| POST   | `/v1/memory/recall`| query              | `list[MemoryHit]`   | BM25 shortlist + Jev rerank (Req2)           |
-| GET    | `/v1/memory/list`  | `?tenant_id=&limit=` | `[{id,text,type}]` | Newest-first tenant memories                 |
-| GET    | `/v1/memory/count` | `?tenant_id=`       | `{count}`           | Tenant memory size                           |
-| DELETE | `/v1/memory/{id}`  | `?tenant_id=` (required) | `{deleted}`   | Delete by id, tenant-scoped (mismatch → false) |
-| POST   | `/v1/verify`       | draft + evidence   | `VerifyResult`      | Support verdict for a draft reply            |
-
-Live Jev routes (`orchestrate`, `memory/recall`, `verify`) return **503
-with a clear message** when `TYPESAFE_API_KEY` is missing. `triage`/`ingest`
-fall back to a neutral offline mock without `?live=true`. Every response
-carries `X-Request-Id` and structured latency logs.
-
-## Push to GitHub + go live
-
-Already live at **https://github.com/Chandan062311/PulseDeskOS** (`master`).
-To push new commits:
+Requirements: Python 3.11+, Node.js 22+.
 
 ```bash
-cd pulsedesk-os
-git push origin master
+git clone https://github.com/Chandan062311/PulseDeskOS.git
+cd PulseDeskOS
+
+make setup       # creates .venv, installs backend + dev deps, installs UI deps
+make api         # starts FastAPI on http://localhost:8000
+make ui          # starts Vite console on http://localhost:5173
 ```
 
-**UI on Vercel:** import the repo → Root Directory `frontend` →
-env `VITE_API=https://<your-api-host>` → deploy (`frontend/vercel.json`
-is included; SPA rewrites handled).
+### Offline Mode vs. Live Jev Mode
 
-**API on Render:** New → Blueprint → select repo (`render.yaml` included) →
-set `TYPESAFE_API_KEY` in the dashboard → deploy. Update
-`PULSEDESK_CORS_ORIGINS` to your Vercel domain, and point the UI's
-`VITE_API` at the Render URL.
+- **Zero-Config Offline Mode:** Without an API key, `/v1/triage` and `/v1/ingest` run offline using deterministic keyword heuristics. Perfect for local dev and automated CI testing.
+- **Live Mode:** Obtain an API key at [console.typesafe.ai/keys](https://console.typesafe.ai/keys) and set `TYPESAFE_API_KEY` in `.env`. Live endpoints (`/v1/orchestrate`, `/v1/memory/recall`, `/v1/verify`) will automatically use real-time Jev models.
 
-Demoing it live? Follow `DEMO.md` (5-minute script with offline fallback).
+---
 
-## Production run (self-hosted)
+## End-to-End Demo Simulation
 
-Segregation: one secret in `.env` (the Jev key — never git), data in the
-`pddata` volume, code in images. Per-IP rate limiting (120/min) guards the
-live Jev routes against runaway bills.
+Run the 5-ticket Monday morning support storm simulation against a running API:
 
 ```bash
-cp .env.example .env  # set TYPESAFE_API_KEY only
-docker compose up --build -d   # api :8000 (4 workers, WAL sqlite) + ui :8080
+python sandbox/run_demo.py
+```
+
+This exercises the full live pipeline across real-world ticket scenarios:
+1. **Critical Outage (API 500s):** `bug_report` &rarr; high urgency &rarr; `auto_route`
+2. **Duplicate Charge:** `billing` &rarr; high confidence &rarr; `auto_route`
+3. **VPN Provisioning:** `it_access` &rarr; credential check safe &rarr; `auto_route`
+4. **Phishing & Credential Theft:** Suspicious bonus offer &rarr; high spam risk &rarr; `quarantine_spam`
+5. **Vague / Ambiguous Report:** Low classification confidence &rarr; routed to `human_review`
+
+Results are logged with full traces to `sandbox/report.json` (gitignored).
+
+---
+
+## Operations Console UI
+
+The web operations console (`frontend/`) provides four dense, responsive views:
+
+1. **Triage Composer (`/triage`):** Interactive ticket composer with real-time feedback, calibrated meter gauges for route confidence, spam risk, urgency, and frustration, and full 9-question breakdown.
+2. **Pipeline Inspector (`/pipeline`):** Live 5-stage trace showing Triage &rarr; Memory Recall &rarr; Handler Dispatch &rarr; Draft Reply &rarr; Verification Verdict.
+3. **Human Review Queue (`/review`):** Dedicated operator queue for tickets gated to human review due to low routing confidence, borderline spam scores, or unassigned categories.
+4. **System Health (`/system`):** Real-time API connection status, live Jev key detection, active configuration thresholds, and endpoint directory.
+
+---
+
+## REST API Reference
+
+Interactive OpenAPI Swagger documentation is available at `http://localhost:8000/docs`.
+
+| Method | Endpoint | Description | Mode |
+| --- | --- | --- | --- |
+| `GET` | `/healthz` | Health check probe | Offline |
+| `GET` | `/v1/status` | Reports whether live Jev key is loaded | Offline |
+| `POST` | `/v1/triage` | Evaluate 9 triage judgments and apply policy gates | Offline / Live (`?live=true`) |
+| `POST` | `/v1/ingest` | Triage ticket and dispatch registered handler | Offline / Live (`?live=true`) |
+| `POST` | `/v1/orchestrate` | Full chain: Triage &rarr; Recall &rarr; Dispatch &rarr; Draft &rarr; Verify | Live Jev |
+| `POST` | `/v1/memory/store` | Store tenant-scoped memory document | Offline |
+| `POST` | `/v1/memory/seed` | Seed default operational policies idempotently | Offline |
+| `POST` | `/v1/memory/recall` | Retrieve candidates via BM25 and rerank via Jev | Live Jev |
+| `GET` | `/v1/memory/list` | List memories for a tenant | Offline |
+| `GET` | `/v1/memory/count` | Count total memories for a tenant | Offline |
+| `DELETE` | `/v1/memory/{id}` | Delete tenant memory (tenant ID strictly required) | Offline |
+| `POST` | `/v1/verify` | Verify draft response against recalled evidence | Live Jev |
+
+---
+
+## Claude Code Plugin & FastMCP Tools
+
+PulseDesk OS is packaged as a ready-to-use **Claude Code plugin** and **FastMCP server**:
+
+### Slash Commands
+- `/pulsedesk:triage <ticket>` — Run 9-question triage and print gating decisions.
+- `/pulsedesk:orchestrate <ticket>` — Execute the complete orchestration pipeline.
+- `/pulsedesk:memory <query>` — Search and inspect tenant memory.
+
+### FastMCP Tools
+The MCP server (`backend/mcp_server.py`) exposes 5 tools to any MCP-compliant client (Claude Desktop, Claude Code, Cursor):
+- `triage_ticket(subject, message, ...)`
+- `recall_memory(query, tenant_id, ...)`
+- `add_memory(text, type, tenant_id, ...)`
+- `list_memories(tenant_id, limit)`
+- `verify_response(draft, evidence, ...)`
+
+### Using with Claude Code
+```bash
+# Test the plugin locally:
+claude --plugin-dir .
+
+# Validate the plugin packaging:
+claude plugin validate .
+```
+
+### Standalone FastMCP Server
+```bash
+make mcp
+```
+
+---
+
+## Production Deployment
+
+### 1. Docker & Docker Compose
+Self-host on any Linux server, AWS EC2, or DigitalOcean Droplet:
+```bash
+cp .env.example .env
+docker compose up -d
 ./scripts/smoke.sh
-./scripts/backup.sh ./backups  # online snapshot via MEMORY_DB
-docker build -t pulsedesk-os:1.0 .            # verified 216MB
-docker build -t pulsedesk-ui:1.0 ./frontend   # verified 63MB
-# or: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-CI (`.github/workflows/ci.yml`) runs `ruff check`, `mypy backend`
-(strict), `pytest`, and the Vite build on every push.
+### 2. Render Blueprint
+Deploy the backend API with persistent SQLite disk storage in one click using [render.yaml](render.yaml):
+1. Fork or push this repository to GitHub.
+2. In Render, select **New +** &rarr; **Blueprint** &rarr; connect your repository.
+3. Configure `TYPESAFE_API_KEY` in the Render environment settings.
 
-`TriageResult.action` is one of `auto_route`, `human_review`,
-`quarantine_spam`, derived from `config.yaml` thresholds (see
-`ARCHITECTURE.md`).
+### 3. Vercel Frontend
+Deploy the Vite operations console on Vercel using [frontend/vercel.json](frontend/vercel.json):
+1. Connect the repository to Vercel.
+2. Set Root Directory to `frontend`.
+3. Set environment variable `VITE_API=https://your-api-domain.com`.
 
-## Claude Code plugin (Superpowers-style)
+---
 
-This repo **is** the plugin — manifest + skills + agent + bundled MCP server:
+## Configuration & Customization
 
-```
-.claude-plugin/plugin.json   # name: pulsedesk, v0.3.0
-skills/triage/SKILL.md       # /pulsedesk:triage
-skills/orchestrate/SKILL.md  # /pulsedesk:orchestrate
-skills/memory/SKILL.md       # /pulsedesk:memory
-agents/reviewer.md           # review-queue worker agent
-.mcp.json                    # bundled MCP (5 tools: triage, recall, add, list, verify)
-```
+All operational thresholds and model weights live in [`config.yaml`](config.yaml):
 
-Test locally, install from the marketplace:
+- **Routing Gates:** Set `routing.topic_confidence_threshold: 0.75` and `routing.other_always_review: true`.
+- **Spam Scoring:** Weighted sum of credential requests (0.45), sender mismatch (0.30), and unexpected reward (0.25). Quarantines above 0.60; routes borderline scores (0.40–0.60) to human review.
+- **Memory Filtering:** Drops prompt injections above `memory.drop_injection_threshold: 0.30`; retains relevant evidence above 0.70.
+- **Auto-Capture:** Set `memory.auto_capture_resolved: true` to automatically store resolved support resolutions as future memory context.
+
+### Adding Custom Handlers
+Handlers follow the Open/Closed principle. To add a new ticket category:
+1. Create `backend/handlers/my_handler.py`.
+2. Implement your handler logic and register it:
+   ```python
+   from backend.registry import register
+   from backend.schemas import HandlerResult, Ticket, Customer
+
+   @register("my_route")
+   def handle_my_route(ticket: Ticket, customer: Customer) -> HandlerResult:
+       return HandlerResult(handler="my_route", status="resolved", action_taken="...")
+   ```
+3. Add the route name to `config.yaml`.
+
+---
+
+## Quality Assurance & Verification
+
+Every pull request and release is validated through strict automated checks:
 
 ```bash
-claude --plugin-dir .                              # try it: /pulsedesk:triage …
-claude plugin validate .                           # ✔ Validation passed
-/plugin marketplace add Chandan062311/PulseDeskOS  # in Claude Code
-/plugin install pulsedesk@pulsedesk-marketplace
+make test       # runs pytest (59 tests), ruff lint/format, and strict mypy
+make build-ui   # verifies Vite production build
+make secrets    # scans repo for leaked credentials or live tokens
+make smoke      # automated end-to-end HTTP integration smoke tests
 ```
 
-Prerequisite for the MCP server: `pip install -e ".[dev]"` (fastmcp,
-typesafe-sdk) and `TYPESAFE_API_KEY` for live Jev routes.
+---
 
-## MCP usage (without the plugin)
+## Security & Data Privacy
 
-Five tools (`triage_ticket`, `recall_memory`, `add_memory`, `list_memories`,
-`verify_response`) for any MCP host:
+- **Single Secret Architecture:** Only `TYPESAFE_API_KEY` is required for live production calls.
+- **Multi-Tenant Isolation:** All memory queries and deletes are strictly scoped by `tenant_id`. Deleting without matching tenant ownership fails safely.
+- **Prompt Injection Defense:** Recalled memories are evaluated by Jev for prompt injection attacks before being fed into drafting agents.
+- **Credential & Secret Protection:** Live credentials, SQLite databases, and sandbox test artifacts are excluded from version control.
 
-```bash
-make mcp                                            # stdio server on PATH python
-claude mcp add pulsedesk -- python -m backend.mcp_server   # from repo root
-```
-
-Cursor / VS Code / Codex: point your MCP config at
-`python -m backend.mcp_server` with cwd = repo root (stdio transport).
-
-`backend/mcp_server.py` wraps the same `Ticket`,
-`TriageResult`, `MemoryHit`, `VerifyResult` schemas (5 tools: triage_ticket,
-recall_memory, add_memory, list_memories, verify_response). No duplicate types.
-
-## Stitch UI status
-
-`frontend/` is a working Vite+React ops console (sidebar nav: Triage /
-Pipeline / Review / System; `npm run dev`, `npm run build` verified).
-Production screens are generated via Stitch MCP — see
-`frontend/README.md` and `frontend/stitch-prompts.md` (3 copy-paste prompts:
-Inbox dashboard, Triage detail, Review queue).
-
-## Evals + thresholds
-
-`evals/golden-tickets.json` holds 14 labeled tickets with expected route and
-action. `evals/README.md` explains how each ticket maps to confidence plots
-and how to tune `config.yaml` thresholds (`topic_confidence_threshold`,
-spam weights, memory gates) without changing code.
-
-## Project structure
-
-```
-pulsedesk-os/
-  README.md            # this file
-  ARCHITECTURE.md      # flow, components, gating, extensibility rules
-  LICENSE              # MIT
-  .gitignore
-  config.yaml          # all tunable thresholds (change here, not in code)
-  .env.example         # TYPESAFE_API_KEY template
-  pyproject.toml
-  backend/
-    schemas.py         # frozen contracts (single source of truth)
-    registry.py        # Handler / MemoryBackend registries + register()
-    jev_client.py      # all Jev calls go through here
-    handlers/          # builtins.py: 5 handlers (extend with new files)
-    memory_backends/   # SQLite now, Postgres/supermemory later
-    main.py            # FastAPI app: triage/ingest/orchestrate/memory/verify
-    mcp_server.py      # FastMCP tools (triage/recall/add/list/verify)
-    orchestrator.py    # triage→recall→dispatch→draft→verify chain
-  frontend/
-    README.md          # run guide + design tokens + Stitch workflow
-    stitch-prompts.md  # 3 copy-paste screen prompts
-    package.json       # Vite+React console (npm run dev/build)
-    src/               # App shell + api.ts + components/
-  evals/
-    README.md          # golden tickets -> plots -> threshold tuning
-    golden-tickets.json# 14 labeled tickets (all 5 routes, 3 actions)
-  skills/              # plugin skills: triage, orchestrate, memory
-  agents/              # reviewer agent
-  .claude-plugin/      # plugin manifest (name: pulsedesk)
-  .mcp.json            # bundled MCP server config
-  sandbox/             # demo runner + audit reports (REPORT.md, REPORT_V2.md)
-  tests/               # pytest suite
-```
+---
 
 ## Contributing
 
-- Add a handler = new file under `backend/handlers/` + `register()` it.
-  Never edit triage core to add a route.
-- Change shapes in `backend/schemas.py` (domain contracts) or the
-  request/response models in `backend/main.py` + bump the `/v1` API version.
-  Never use ad-hoc dicts across handler boundaries.
-- Tune behavior in `config.yaml`, not in code.
-- All Jev calls go through `backend/jev_client.py`.
-- Keep models frozen (`frozen=True, extra="forbid"`).
+We welcome contributions! Please review [CONTRIBUTING.md](CONTRIBUTING.md) for architectural guidelines, coding standards, and PR requirements.
+
+---
 
 ## License
 
-MIT. See `LICENSE`.
+PulseDesk OS is open-source software licensed under the [MIT License](LICENSE).

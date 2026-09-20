@@ -2,7 +2,7 @@
 # Online SQLite backup via the backup API (safe under write load).
 # Usage: MEMORY_DB=/data/memory.db ./scripts/backup.sh [/backup/dir]
 set -euo pipefail
-DB="${MEMORY_DB:-pulsedesk-os/memory.db}"
+DB="${MEMORY_DB:-memory.db}"
 OUT_DIR="${1:-./backups}"
 mkdir -p "$OUT_DIR"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"

@@ -2,7 +2,7 @@
   "name": "pulsedesk-os-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "PulseDesk OS demo console (Stitch-fallback: same tokens as stitch-prompts.md)",
+  "description": "PulseDesk OS React operations console",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",

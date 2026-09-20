@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 memory.db
+*.sqlite
+*.sqlite3
 .env
 dist/
 node_modules/
@@ -10,3 +12,15 @@ backups/
 *-wal
 *-shm
 frontend/stitch/*.png
+sandbox/*.json
+sandbox/*.jsonl
+
+# Build & packaging artifacts
+*.egg-info/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.DS_Store

@@ -32,7 +32,7 @@ ui:
 test:
 	$(PYTEST)
 	$(RUFF) check .
-	$(MYPY) .
+	$(MYPY) backend
 
 smoke:
 	bash scripts/smoke.sh

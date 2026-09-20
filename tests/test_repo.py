@@ -13,7 +13,6 @@ PUBLISHABLE_DOCS = [
     ROOT / "ARCHITECTURE.md",
     ROOT / "CONTRIBUTING.md",
     ROOT / "frontend" / "README.md",
-    ROOT / "frontend" / "stitch-prompts.md",
     *sorted((ROOT / "skills").rglob("SKILL.md")),
     *sorted((ROOT / "agents").glob("*.md")),
 ]
@@ -29,7 +28,7 @@ def test_marketplace_manifest() -> None:
 
 
 def test_no_absolute_author_paths_in_docs() -> None:
-    """Publishable docs carry no /home/... paths (sandbox logs exempt)."""
+    """Publishable docs carry no local absolute paths."""
     offenders = [str(p) for p in PUBLISHABLE_DOCS if re.search(r"/home/[a-z_]+", p.read_text())]
     assert offenders == []
 
@@ -54,7 +53,8 @@ def test_no_live_secrets_in_repo() -> None:
             ".toml",
         }:
             continue
-        if any(part in {"node_modules", "dist", ".git"} for part in path.parts):
+        ignored = {"node_modules", "dist", ".git", ".venv", ".pytest_cache"}
+        if any(part in ignored for part in path.parts):
             continue
         if pattern.search(path.read_text(errors="ignore")):
             hits.append(str(path))

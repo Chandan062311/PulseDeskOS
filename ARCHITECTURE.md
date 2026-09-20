@@ -34,7 +34,7 @@ flowchart TD
 | MCP | `backend/mcp_server.py` | FastMCP tools wrapping the same schemas. |
 | Plugin | `.claude-plugin/plugin.json`, `skills/`, `agents/`, `.mcp.json` | Superpowers-style packaging: `/pulsedesk:triage`, `/pulsedesk:orchestrate`, `/pulsedesk:memory`, reviewer agent, bundled MCP server. |
 | Config | `config.yaml` | Tunable thresholds and weights: routing, spam, memory, skill-suggest gates. |
-| Frontend | `frontend/` | Vite+React ops console (Triage/Pipeline/Review/System); Stitch prompts for production screens. |
+| Frontend | `frontend/` | Vite+React ops console (Triage/Pipeline/Review/System). |
 | Evals | `evals/` | `golden-tickets.json` + confidence-plot tuning workflow. |
 
 ## Extensibility rules

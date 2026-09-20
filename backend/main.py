@@ -186,7 +186,7 @@ async def rate_limit_middleware(
     with _rate_lock:
         hits = [t for t in _rate_hits.get(client, []) if now - t < _RATE_WINDOW_S]
         if len(hits) >= limit:
-            return JSONResponse(  # type: ignore[return-value]
+            return JSONResponse(
                 status_code=429,
                 content={"detail": "Rate limit exceeded. Slow down and retry."},
                 headers={"Retry-After": "60"},
