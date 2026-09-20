@@ -17,82 +17,9 @@ export default function ReviewQueue({
   const [auditNote, setAuditNote] = useState<string>("");
   const [resolvedStatus, setResolvedStatus] = useState<string | null>(null);
 
-  // Combine session items with pre-seeded sample exceptions if session queue is empty
-  const allQueueItems: ReviewItem[] = useMemo(() => {
-    if (items.length > 0) return items;
-    return [
-      {
-        sample: {
-          id: "PD-8932",
-          subject: "Something seems off with my account balance",
-          message: "Hi, something seems off but I'm not sure what. Can someone check?",
-          sender: "user@acme.com",
-          plan: "growth",
-          openOrders: "",
-        },
-        triage: {
-          route: "other",
-          route_confidence: 0.48,
-          spam_risk: 0.45,
-          urgency: 0.35,
-          frustration: 0.4,
-          needs_memory: 0.7,
-          refund_requested: 0.1,
-          pii_detected: 0.0,
-          action: "human_review",
-          reason: "Spam risk in uncertain band (0.40–0.60) and route 'other' always requires human review",
-        },
-      },
-      {
-        sample: {
-          id: "PD-8935",
-          subject: "Root cert re-signing for legacy cluster",
-          message: "Need root certificate renewal for staging cluster before Monday expiry.",
-          sender: "devops@megacorp.io",
-          plan: "enterprise",
-          openOrders: "",
-        },
-        triage: {
-          route: "it_access",
-          route_confidence: 0.64,
-          spam_risk: 0.08,
-          urgency: 0.7,
-          frustration: 0.2,
-          needs_memory: 0.4,
-          refund_requested: 0.0,
-          pii_detected: 0.0,
-          action: "human_review",
-          reason: "Route confidence 0.64 < 0.75 cutoff threshold; manual gate triggered",
-        },
-      },
-      {
-        sample: {
-          id: "PD-8938",
-          subject: "Urgent: payment invoice update wire detail check",
-          message: "Please find attached the revised wire instructions for payment. Urgent wire today.",
-          sender: "invoicing@external-vendor-check.com",
-          plan: "standard",
-          openOrders: "",
-        },
-        triage: {
-          route: "billing",
-          route_confidence: 0.72,
-          spam_risk: 0.52,
-          urgency: 0.9,
-          frustration: 0.1,
-          needs_memory: 0.3,
-          refund_requested: 0.0,
-          pii_detected: 0.2,
-          action: "human_review",
-          reason: "Spam risk 0.52 inside the 0.40–0.60 review band (below 0.60 quarantine threshold)",
-        },
-      },
-    ];
-  }, [items]);
-
   const rows = useMemo(
-    () => (filter === "all" ? allQueueItems : allQueueItems.filter((i) => i.triage.action === filter)),
-    [allQueueItems, filter]
+    () => (filter === "all" ? items : items.filter((i) => i.triage.action === filter)),
+    [items, filter]
   );
 
   const selectedItem: ReviewItem | undefined = rows[selectedIndex] || rows[0];
@@ -109,7 +36,7 @@ export default function ReviewQueue({
 
   return (
     <div className="stack">
-      {/* Threshold Explainer Strip (Matching Screen 3 Stitch design) */}
+      {/* Active Threshold Explainer Strip */}
       <div
         className="card"
         style={{
@@ -120,7 +47,7 @@ export default function ReviewQueue({
       >
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <strong style={{ color: "var(--ink)", fontSize: "12px" }}>Active Gating Criteria:</strong>
+            <strong style={{ color: "var(--ink)", fontSize: "12px" }}>Active Review Gating Criteria:</strong>
             <span className="small muted" style={{ marginLeft: "8px" }}>
               Policy thresholds triggering operator review
             </span>
@@ -154,7 +81,7 @@ export default function ReviewQueue({
             <div className="row" style={{ gap: "6px" }}>
               <label htmlFor="action-filter" className="sr-only">Filter by action</label>
               <select id="action-filter" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}>
-                <option value="all">All Exceptions ({allQueueItems.length})</option>
+                <option value="all">All Exceptions ({items.length})</option>
                 <option value="human_review">human_review</option>
                 <option value="quarantine_spam">quarantine_spam</option>
                 <option value="auto_route">auto_route</option>
@@ -169,8 +96,8 @@ export default function ReviewQueue({
 
           {rows.length === 0 ? (
             <EmptyState
-              title="Queue empty"
-              body="No tickets currently meet human review or quarantine criteria."
+              title="Review queue is empty"
+              body="No tickets currently require manual review. Tickets evaluated by the triage engine with action 'human_review' or 'quarantine_spam' will appear here."
             />
           ) : (
             <div className="table-container">
@@ -237,7 +164,7 @@ export default function ReviewQueue({
           {selectedItem ? (
             <div className="stack">
               <div>
-                <strong style={{ color: "var(--ink)" }}>{selectedItem.sample.subject}</strong>
+                <strong style={{ color: "var(--ink)" }}>{selectedItem.sample.subject || "(no subject)"}</strong>
                 <div className="muted small">Sender: {selectedItem.sample.sender}</div>
               </div>
 
@@ -293,7 +220,7 @@ export default function ReviewQueue({
               </div>
             </div>
           ) : (
-            <EmptyState title="No ticket selected" body="Select a ticket from the queue to review." />
+            <EmptyState title="No ticket selected" body="When tickets enter the review queue, select a ticket to review its details and resolve." />
           )}
         </Section>
       </div>

@@ -70,15 +70,36 @@ export default function TriagePanel({
     <div className="grid">
       <Section title="Compose ticket" hint="Required: message + sender. Subject optional.">
         <label htmlFor="subject">Subject</label>
-        <input id="subject" value={ticket.subject} onChange={(e) => setTicket({ ...ticket, subject: e.target.value })} />
+        <input
+          id="subject"
+          placeholder="e.g. Cannot connect to VPN"
+          value={ticket.subject}
+          onChange={(e) => setTicket({ ...ticket, subject: e.target.value })}
+        />
         <label htmlFor="message">Message</label>
-        <textarea id="message" rows={4} value={ticket.message} onChange={(e) => setTicket({ ...ticket, message: e.target.value })} />
+        <textarea
+          id="message"
+          rows={4}
+          placeholder="Enter ticket body text..."
+          value={ticket.message}
+          onChange={(e) => setTicket({ ...ticket, message: e.target.value })}
+        />
         <label htmlFor="sender">Sender email</label>
-        <input id="sender" value={ticket.sender} onChange={(e) => setTicket({ ...ticket, sender: e.target.value })} />
+        <input
+          id="sender"
+          placeholder="e.g. user@example.com"
+          value={ticket.sender}
+          onChange={(e) => setTicket({ ...ticket, sender: e.target.value })}
+        />
         <div className="grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
           <div>
             <label htmlFor="plan">Customer plan</label>
-            <input id="plan" value={ticket.plan} onChange={(e) => setTicket({ ...ticket, plan: e.target.value })} />
+            <input
+              id="plan"
+              placeholder="enterprise / growth / free"
+              value={ticket.plan}
+              onChange={(e) => setTicket({ ...ticket, plan: e.target.value })}
+            />
           </div>
           <div>
             <label htmlFor="orders">Open orders (comma-separated)</label>
@@ -86,11 +107,11 @@ export default function TriagePanel({
               id="orders"
               value={ticket.openOrders}
               onChange={(e) => setTicket({ ...ticket, openOrders: e.target.value })}
-              placeholder="A-104, INV-2041"
+              placeholder="e.g. A-104, INV-2041"
             />
           </div>
         </div>
-        <div className="row actions">
+        <div className="row actions" style={{ marginTop: "12px" }}>
           <button disabled={!valid || loading} onClick={() => void run(true)}>
             Triage live (Jev)
           </button>
@@ -99,45 +120,35 @@ export default function TriagePanel({
           </button>
           <span className="muted">mode: {mode}</span>
         </div>
-        {!valid && <p className="muted">Enter a message and sender to enable triage.</p>}
-        <h3 style={{ fontSize: "12px", fontWeight: 600, color: "var(--ink)", margin: "14px 0 6px" }}>Sample Tickets</h3>
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col" style={{ width: "80px" }}>ID</th>
-                <th scope="col">Subject</th>
-                <th scope="col" style={{ textAlign: "right", width: "60px" }}>
-                  <span className="sr-only">Load</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {SAMPLES.map((s) => (
-                <tr key={s.id}>
-                  <td><code>{s.id}</code></td>
-                  <td style={{ fontWeight: 500 }}>{s.subject}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <button
-                      className="ghost"
-                      style={{ padding: "2px 8px", fontSize: "11px" }}
-                      onClick={() =>
-                        setTicket({
-                          subject: s.subject,
-                          message: s.message,
-                          sender: s.sender,
-                          plan: "enterprise",
-                          openOrders: "",
-                        })
-                      }
-                    >
-                      Load
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {!valid && <p className="muted small" style={{ marginTop: "6px" }}>Enter a message and sender to enable triage.</p>}
+
+        {/* Optional quick scenario loader */}
+        <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span className="small muted">Load test scenario:</span>
+          <select
+            aria-label="Load test scenario"
+            style={{ width: "auto", fontSize: "11px", padding: "3px 8px" }}
+            value=""
+            onChange={(e) => {
+              const s = SAMPLES.find((item) => item.id === e.target.value);
+              if (s) {
+                setTicket({
+                  subject: s.subject,
+                  message: s.message,
+                  sender: s.sender,
+                  plan: "enterprise",
+                  openOrders: s.id === "dup-charge" ? "A-104" : "",
+                });
+              }
+            }}
+          >
+            <option value="" disabled>Select a scenario…</option>
+            {SAMPLES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.subject} ({s.id})
+              </option>
+            ))}
+          </select>
         </div>
       </Section>
 

@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { API_BASE, SAMPLES, getHealth, type TicketInput, type TriageResult } from "./api";
-import InboxPanel from "./components/InboxPanel";
+import { API_BASE, getHealth, type TicketInput, type TriageResult } from "./api";
 import PipelinePanel from "./components/PipelinePanel";
 import ReviewQueue from "./components/ReviewQueue";
 import SystemPanel from "./components/SystemPanel";
 import TriagePanel, { type ReviewItem } from "./components/TriagePanel";
 
 const TABS = [
-  { id: "inbox", label: "Inbox" },
   { id: "triage", label: "Triage" },
   { id: "pipeline", label: "Pipeline" },
   { id: "review", label: "Review" },
@@ -17,15 +15,15 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 export default function App() {
-  const [tab, setTab] = useState<TabId>("inbox");
+  const [tab, setTab] = useState<TabId>("triage");
   const [health, setHealth] = useState("checking…");
-  const [tenant, setTenant] = useState("acme-corp");
+  const [tenant, setTenant] = useState("default");
   const [ticket, setTicket] = useState<TicketInput>({
-    subject: SAMPLES[0].subject,
-    message: SAMPLES[0].message,
-    sender: SAMPLES[0].sender,
+    subject: "",
+    message: "",
+    sender: "",
     plan: "enterprise",
-    openOrders: "A-104",
+    openOrders: "",
   });
   const [activeTriage, setActiveTriage] = useState<TriageResult | null>(null);
   const [queue, setQueue] = useState<ReviewItem[]>([]);
@@ -35,12 +33,6 @@ export default function App() {
       .then(() => setHealth("ok"))
       .catch(() => setHealth("unreachable"));
   }, []);
-
-  function handleSelectFromInbox(t: TicketInput, tr?: TriageResult) {
-    setTicket(t);
-    if (tr) setActiveTriage(tr);
-    setTab("triage");
-  }
 
   return (
     <div className="app-container">
@@ -54,7 +46,7 @@ export default function App() {
           <div className="brand-badge">PD</div>
           <div>
             <span className="brand-text">PulseDesk OS</span>
-            <span className="brand-sub">ops console · v0.1</span>
+            <span className="brand-sub">Operations Console</span>
           </div>
 
           <div className="tenant-badge" style={{ marginLeft: "14px" }}>
@@ -64,9 +56,9 @@ export default function App() {
               value={tenant}
               onChange={(e) => setTenant(e.target.value)}
             >
-              <option value="acme-corp">acme-corp</option>
               <option value="default">default</option>
-              <option value="stark-industries">stark-industries</option>
+              <option value="acme-corp">acme-corp</option>
+              <option value="production">production</option>
             </select>
           </div>
         </div>
@@ -75,27 +67,6 @@ export default function App() {
           <div className={`health-status ${health === "ok" ? "ok" : "down"}`}>
             <span className={`dot ${health === "ok" ? "" : "down"}`} aria-hidden="true" />
             <span>backend: {health}</span>
-            <span className="small muted mono" style={{ marginLeft: "2px" }}>
-              {health === "ok" ? "(24ms · :8000)" : "(:8000)"}
-            </span>
-          </div>
-
-          <div
-            style={{
-              width: "26px",
-              height: "26px",
-              borderRadius: "4px",
-              background: "var(--primary-subtle)",
-              color: "var(--primary)",
-              border: "1px solid var(--primary-border)",
-              display: "grid",
-              placeItems: "center",
-              fontSize: "11px",
-              fontWeight: 700,
-            }}
-            title="Operator: Active"
-          >
-            OP
           </div>
         </div>
       </header>
@@ -114,39 +85,28 @@ export default function App() {
                   onClick={() => setTab(t.id)}
                 >
                   <span>{t.label}</span>
-                  {t.id === "inbox" && <span className="badge">6</span>}
-                  {t.id === "triage" && <span className="badge">active</span>}
-                  {t.id === "review" && (
-                    <span className="badge">{queue.length > 0 ? queue.length : "3"}</span>
+                  {t.id === "review" && queue.length > 0 && (
+                    <span className="badge">{queue.length}</span>
                   )}
                 </button>
               ))}
             </nav>
           </div>
 
-          {/* Quick Route Filter Badges */}
+          {/* Supported Handlers */}
           <div>
-            <div className="sidebar-section-title">Active Routes</div>
+            <div className="sidebar-section-title">Registered Routes</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px", padding: "0 4px" }}>
-              {[
-                { name: "it_access", count: "112" },
-                { name: "bug_report", count: "84" },
-                { name: "billing", count: "65" },
-                { name: "hr_policy", count: "29" },
-                { name: "other", count: "58" },
-              ].map((r) => (
+              {["it_access", "bug_report", "billing", "hr_policy", "other"].map((name) => (
                 <div
-                  key={r.name}
+                  key={name}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
                     fontSize: "11px",
                     color: "var(--muted)",
                     padding: "3px 4px",
                   }}
                 >
-                  <span className="mono">{r.name}</span>
-                  <span className="mono small">{r.count}</span>
+                  <span className="mono">{name}</span>
                 </div>
               ))}
             </div>
@@ -163,7 +123,6 @@ export default function App() {
             <p>Code owns the workflow — Jev supplies the judgments. Every number traces to evidence.</p>
           </header>
 
-          {tab === "inbox" && <InboxPanel onSelectTicket={handleSelectFromInbox} />}
           {tab === "triage" && (
             <TriagePanel
               ticket={ticket}
