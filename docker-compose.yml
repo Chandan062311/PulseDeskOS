@@ -1,0 +1,29 @@
+# PulseDesk OS compose stack.
+# Note: the UI here is the nginx production build on container port 80
+# (mapped to host 8080), NOT `vite preview`. Local dev (`make ui`) uses :5173.
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      MEMORY_DB: /data/memory.db
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+    volumes:
+      - pddata:/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  ui:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  pddata:

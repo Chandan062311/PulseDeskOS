@@ -1,0 +1,8 @@
+{
+  "name": "pulsedesk",
+  "description": "Enterprise support triage + memory orchestration powered by TypeSafe Jev. Route tickets, run full pipelines, recall tenant memory.",
+  "version": "0.3.0",
+  "author": { "name": "PulseDesk OS contributors" },
+  "license": "MIT",
+  "homepage": "https://github.com/pulsedesk/pulsedesk-os"
+}

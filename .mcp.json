@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pulsedesk": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/backend/mcp_server.py"],
+      "env": {}
+    }
+  }
+}

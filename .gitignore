@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+memory.db
+.env
+dist/
+node_modules/
+
+backups/
+*-wal
+*-shm

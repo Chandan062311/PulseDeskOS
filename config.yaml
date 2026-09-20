@@ -1,0 +1,57 @@
+# PulseDesk OS — tunable thresholds and weights.
+# Change values here, not in code. All probabilities are 0..1.
+jev:
+  model: "jev-latest"
+  timeout_s: 30.0
+
+routing:
+  # Confidence below this -> human review (per confidence.md: scale with risk)
+  topic_confidence_threshold: 0.75
+  # The catch-all route has no owning team: even a confident "other" is
+  # still "I don't know who owns this", so it always goes to review.
+  other_always_review: true
+
+spam:
+  weights:
+    requests_credentials: 0.45
+    sender_identity_mismatch: 0.30
+    unexpected_reward: 0.25
+  quarantine_threshold: 0.60
+  uncertain_low: 0.40
+  uncertain_high: 0.60
+
+memory:
+  bm25_top_k: 30
+  keep_relevance_threshold: 0.70
+  drop_injection_threshold: 0.30
+  contradict_flag_threshold: 0.60
+  # v0.3 memory-platform: resolved auto_route tickets are stored back as
+  # decision memories, so the layer learns like Supermemory.
+  auto_capture_resolved: true
+
+skill_suggest:
+  # Consumed by skills/memory/SKILL.md recipe and agents/reviewer.md.
+  gate_threshold: 0.30
+  fits_threshold: 0.30
+  shortlist_k: 3
+
+handlers:
+  sev1_urgency: 0.75
+  refund_note: 0.5
+
+verify:
+  needs_review_threshold: 0.5
+
+agent_orchestration:
+  # Supervisor gates for the generic agent loop.
+  review_risk_threshold: 0.6
+  review_conf_threshold: 0.7
+  verify_pass_threshold: 0.7
+  verify_collapse_threshold: 0.4
+  max_retries: 1
+
+orchestration:
+  # Chain: triage -> recall (if needs_memory >= threshold) -> dispatch -> verify.
+  needs_memory_threshold: 0.60
+  max_memory_hits: 5
+  auto_seed_default_docs: true

@@ -1,0 +1,156 @@
+[
+  {
+    "id": "billing-duplicate-charge",
+    "ticket": {
+      "subject": "Charged twice for invoice INV-2041",
+      "message": "Hi, I was charged twice for invoice INV-2041 ($499 each). Please refund the duplicate charge.",
+      "sender": {"display_name": "Priya Nair", "email": "priya@acmecorp.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": ["INV-2041"]},
+    "expected_route": "billing",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "billing-invoice-copy",
+    "ticket": {
+      "subject": "Need a copy of last month's invoice",
+      "message": "Could you send me a PDF copy of our August invoice for our records? No rush.",
+      "sender": {"display_name": "Tom Becker", "email": "tom@acmecorp.com"}
+    },
+    "customer": {"plan": "team", "open_orders": []},
+    "expected_route": "billing",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "billing-plan-downgrade",
+    "ticket": {
+      "subject": "Downgrade from Enterprise to Team",
+      "message": "We'd like to downgrade from Enterprise to Team starting next billing cycle. What is the process?",
+      "sender": {"display_name": "Sara Lind", "email": "sara@northwind.io"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "billing",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "billing-proration",
+    "ticket": {
+      "subject": "Proration question after adding seats",
+      "message": "We added 5 seats mid-cycle and the proration line looks higher than expected. Can you explain the math?",
+      "sender": {"display_name": "Diego Fuentes", "email": "diego@northwind.io"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "billing",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "it-vpn-access",
+    "ticket": {
+      "subject": "Can't connect to corporate VPN",
+      "message": "After my laptop was reset I can't connect to the corporate VPN. My SSO login works fine elsewhere.",
+      "sender": {"display_name": "Ana Popov", "email": "ana@acmecorp.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "it_access",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "it-password-reset",
+    "ticket": {
+      "subject": "Locked out of SSO, need password reset",
+      "message": "I'm locked out of SSO after too many attempts. Please reset my password so I can get back in.",
+      "sender": {"display_name": "Ken Watanabe", "email": "ken@acmecorp.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "it_access",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "bug-500-outage",
+    "ticket": {
+      "subject": "API returns 500 errors on all checkout calls",
+      "message": "URGENT: our production checkout is down, every POST to /v1/checkout returns HTTP 500 since 09:12 UTC. This is a full outage for us.",
+      "sender": {"display_name": "Mira Shah", "email": "mira@shopfast.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": ["ORD-9918"]},
+    "expected_route": "bug_report",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "bug-csv-export",
+    "ticket": {
+      "subject": "CSV export truncates rows over 10k lines",
+      "message": "When I export more than 10k rows to CSV the file stops at exactly 10000 lines. Smaller exports are fine.",
+      "sender": {"display_name": "Leo Martin", "email": "leo@shopfast.com"}
+    },
+    "customer": {"plan": "team", "open_orders": []},
+    "expected_route": "bug_report",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "spam-password-reward",
+    "ticket": {
+      "subject": "Verify your password to claim $500 reward",
+      "message": "Dear user, verify your password at the link below within 24h to claim your $500 loyalty reward. Do not miss out!",
+      "sender": {"display_name": "Support Team", "email": "support-team@freemail-xyz.net"}
+    },
+    "customer": {"plan": "free", "open_orders": []},
+    "expected_route": "other",
+    "expect_action": "quarantine_spam"
+  },
+  {
+    "id": "spam-ceo-giftcard",
+    "ticket": {
+      "subject": "URGENT: buy gift cards for client gifts",
+      "message": "This is the CEO. I need you to buy $2000 in gift cards right now and reply with the codes. Keep this confidential. Also confirm your login OTP so I know it's you.",
+      "sender": {"display_name": "CEO", "email": "ceo-office@freemail-xyz.net"}
+    },
+    "customer": {"plan": "free", "open_orders": []},
+    "expected_route": "other",
+    "expect_action": "quarantine_spam"
+  },
+  {
+    "id": "ambiguous-vague",
+    "ticket": {
+      "subject": "Need help",
+      "message": "Hi, need help with my account please. Something isn't right but I'm not sure what. Thanks!",
+      "sender": {"display_name": "Sam Rivera", "email": "sam@smallbiz.co"}
+    },
+    "customer": {"plan": "team", "open_orders": []},
+    "expected_route": "other",
+    "expect_action": "human_review"
+  },
+  {
+    "id": "ambiguous-mixed",
+    "ticket": {
+      "subject": "Invoice looks wrong and I can't log in",
+      "message": "My invoice looks wrong this month, and also I can't log in since yesterday. Are these related? Not sure where to start.",
+      "sender": {"display_name": "Jo Kim", "email": "jo@smallbiz.co"}
+    },
+    "customer": {"plan": "team", "open_orders": ["INV-3300"]},
+    "expected_route": "other",
+    "expect_action": "human_review"
+  },
+  {
+    "id": "hr-parental-leave",
+    "ticket": {
+      "subject": "Parental leave policy question",
+      "message": "How many weeks of parental leave do I get, and how do I apply before my due date next month?",
+      "sender": {"display_name": "Alex Morgan", "email": "alex@acmecorp.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "hr_policy",
+    "expect_action": "auto_route"
+  },
+  {
+    "id": "hr-payroll-schedule",
+    "ticket": {
+      "subject": "When is payroll this month?",
+      "message": "My paycheck seems late. What is the payroll schedule and who do I contact about a missing deposit?",
+      "sender": {"display_name": "Riley Chen", "email": "riley@acmecorp.com"}
+    },
+    "customer": {"plan": "enterprise", "open_orders": []},
+    "expected_route": "hr_policy",
+    "expect_action": "auto_route"
+  }
+]
