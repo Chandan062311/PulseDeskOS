@@ -13,15 +13,41 @@ export function actionTone(action: string): "ok" | "warn" | "bad" {
   return "warn";
 }
 
-export function Meter({ label, value }: { label: string; value: number }) {
+export function Meter({ label, value }: { label?: string; value: number }) {
   const pct = Math.max(0, Math.min(100, Math.round(value * 100)));
+
+  if (!label) {
+    return (
+      <div className="meter-inline">
+        <div
+          className="bar"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="score"
+        >
+          <div style={{ width: `${pct}%` }} />
+        </div>
+        <span className="meter-val">{value.toFixed(2)}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="meter">
       <div className="meter-head">
         <span>{label}</span>
-        <strong>{value.toFixed(2)}</strong>
+        <strong className="mono">{value.toFixed(2)}</strong>
       </div>
-      <div className="bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+      <div
+        className="bar"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
         <div style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -43,7 +69,7 @@ export function Section({ title, hint, children }: { title: string; hint?: strin
 export function EmptyState({ title, body }: { title: string; body: string }) {
   return (
     <div className="empty" role="status">
-      <strong>{title}</strong>
+      <strong style={{ color: "var(--ink)" }}>{title}</strong>
       <p className="muted">{body}</p>
     </div>
   );
@@ -53,7 +79,7 @@ export function LoadingRow({ label }: { label: string }) {
   return (
     <div className="loading" role="status" aria-live="polite">
       <span className="spinner" aria-hidden="true" />
-      {label}
+      <span>{label}</span>
     </div>
   );
 }
@@ -65,7 +91,7 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
         <strong>Request failed.</strong> <span>{message}</span>
       </div>
       {onRetry && (
-        <button className="ghost" onClick={onRetry}>
+        <button className="ghost" onClick={onRetry} style={{ padding: "3px 8px", fontSize: "11px" }}>
           Retry
         </button>
       )}

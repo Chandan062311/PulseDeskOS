@@ -152,50 +152,49 @@ export default function InboxPanel({
 
   return (
     <div className="stack">
-      {/* Metric Cards Banner (Screen 1 KPI Rail) */}
-      <div className="grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-        <div className="card">
-          <div className="muted small">Triage Volume (Today)</div>
-          <strong style={{ fontSize: "1.4rem" }}>{stats.total} tickets</strong>
-          <div className="muted small" style={{ marginTop: "4px" }}>+12% vs yesterday</div>
+      {/* Sleek KPI Summary Strip (Screen 1 Ops Rail) */}
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <div className="kpi-title">Triage Volume</div>
+          <div className="kpi-value">{stats.total} <span className="small muted">tickets</span></div>
+          <div className="kpi-sub">+12% vs yesterday</div>
         </div>
-        <div className="card">
-          <div className="muted small">% Auto-Routed</div>
-          <strong style={{ fontSize: "1.4rem", color: "var(--ok)" }}>{stats.pctAuto}%</strong>
-          <div className="muted small" style={{ marginTop: "4px" }}>Target: &ge; 70%</div>
+        <div className="kpi-card">
+          <div className="kpi-title">% Auto-Routed</div>
+          <div className="kpi-value" style={{ color: "var(--ok)" }}>{stats.pctAuto}%</div>
+          <div className="kpi-sub">Target &ge; 70%</div>
         </div>
-        <div className="card">
-          <div className="muted small">% Human Review</div>
-          <strong style={{ fontSize: "1.4rem", color: "var(--warn)" }}>{stats.pctReview}%</strong>
-          <div className="muted small" style={{ marginTop: "4px" }}>Gated for audit</div>
+        <div className="kpi-card">
+          <div className="kpi-title">% Human Review</div>
+          <div className="kpi-value" style={{ color: "var(--warn)" }}>{stats.pctReview}%</div>
+          <div className="kpi-sub">Gated for manual audit</div>
         </div>
-        <div className="card">
-          <div className="muted small">% Quarantined</div>
-          <strong style={{ fontSize: "1.4rem", color: "var(--bad)" }}>{stats.pctSpam}%</strong>
-          <div className="muted small" style={{ marginTop: "4px" }}>Spam cutoff &ge; 0.60</div>
+        <div className="kpi-card">
+          <div className="kpi-title">% Quarantined</div>
+          <div className="kpi-value" style={{ color: "var(--bad)" }}>{stats.pctSpam}%</div>
+          <div className="kpi-sub">Spam risk &ge; 0.60</div>
         </div>
       </div>
 
       <Section
-        title="Inbound Tickets"
-        hint="Live operational stream. Select any ticket to inspect probability bars, evidence, and actions."
+        title="Live Inbound Triage Stream"
+        hint="Inbound tickets with real-time confidence scores and policy gates. Click 'Inspect' to evaluate."
       >
         <div className="row actions" style={{ justifyContent: "space-between", marginBottom: "12px" }}>
-          <div className="row" style={{ flex: "1 1 300px" }}>
+          <div style={{ flex: "1 1 260px", maxWidth: "320px" }}>
             <input
               type="search"
-              placeholder="Search by ID, subject, or sender..."
+              placeholder="Filter by ID, subject, sender..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ maxWidth: "340px" }}
               aria-label="Search tickets"
             />
           </div>
 
-          <div className="row">
-            <label htmlFor="route-filter" className="sr-only">Filter by route</label>
+          <div className="row" style={{ gap: "8px" }}>
             <select
               id="route-filter"
+              aria-label="Filter by route"
               value={routeFilter}
               onChange={(e) => setRouteFilter(e.target.value)}
               style={{ width: "auto" }}
@@ -208,9 +207,9 @@ export default function InboxPanel({
               <option value="other">other</option>
             </select>
 
-            <label htmlFor="action-filter" className="sr-only">Filter by action</label>
             <select
               id="action-filter"
+              aria-label="Filter by action"
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
               style={{ width: "auto" }}
@@ -229,20 +228,20 @@ export default function InboxPanel({
             body="Try adjusting your route, action, or search filters."
           />
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div className="table-container">
             <table>
               <thead>
                 <tr>
-                  <th scope="col">ID</th>
+                  <th scope="col" style={{ width: "75px" }}>ID</th>
                   <th scope="col">Subject</th>
                   <th scope="col">Sender</th>
                   <th scope="col">Route</th>
-                  <th scope="col" style={{ minWidth: "130px" }}>Confidence</th>
+                  <th scope="col" style={{ minWidth: "120px" }}>Confidence</th>
                   <th scope="col">Spam</th>
                   <th scope="col">Urgency</th>
                   <th scope="col">Action</th>
-                  <th scope="col">
-                    <span className="sr-only">Actions</span>
+                  <th scope="col" style={{ textAlign: "right", width: "80px" }}>
+                    <span className="sr-only">Inspect</span>
                   </th>
                 </tr>
               </thead>
@@ -253,8 +252,8 @@ export default function InboxPanel({
                       <code>{t.id}</code>
                     </td>
                     <td>
-                      <strong>{t.subject}</strong>
-                      <div className="muted small" style={{ maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div style={{ fontWeight: 600, color: "var(--ink)" }}>{t.subject}</div>
+                      <div className="muted small" style={{ maxWidth: "260px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {t.message}
                       </div>
                     </td>
@@ -263,17 +262,17 @@ export default function InboxPanel({
                       <Chip tone="info">{t.route}</Chip>
                     </td>
                     <td>
-                      <Meter label="" value={t.route_confidence} />
+                      <Meter value={t.route_confidence} />
                     </td>
                     <td>
-                      <span className={t.spam_risk >= 0.6 ? "chip chip-bad" : t.spam_risk >= 0.4 ? "chip chip-warn" : "chip chip-ok"}>
+                      <Chip tone={t.spam_risk >= 0.6 ? "bad" : t.spam_risk >= 0.4 ? "warn" : "ok"}>
                         {t.spam_risk.toFixed(2)}
-                      </span>
+                      </Chip>
                     </td>
                     <td>
-                      <span className={t.urgency >= 0.7 ? "chip chip-warn" : "chip chip-info"}>
+                      <Chip tone={t.urgency >= 0.7 ? "warn" : "info"}>
                         {t.urgency.toFixed(2)}
-                      </span>
+                      </Chip>
                     </td>
                     <td>
                       <Chip tone={actionTone(t.action)}>{t.action}</Chip>
@@ -281,6 +280,7 @@ export default function InboxPanel({
                     <td style={{ textAlign: "right" }}>
                       <button
                         className="ghost"
+                        style={{ padding: "3px 9px", fontSize: "11px" }}
                         onClick={() =>
                           onSelectTicket(
                             {
@@ -318,4 +318,3 @@ export default function InboxPanel({
     </div>
   );
 }
-

@@ -80,8 +80,8 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
             <p className="muted sr-note">Stages: {STAGES.join(" → ")}</p>
 
             {capturedId && (
-              <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--info-bg)", borderRadius: "var(--radius)" }}>
-                <strong>Captured Memory ID:</strong> <code>{capturedId}</code>
+              <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--primary-subtle)", border: "1px solid var(--primary-border)", borderRadius: "var(--radius)" }}>
+                <strong style={{ color: "var(--primary)" }}>Captured Memory ID:</strong> <code style={{ marginLeft: "6px" }}>{capturedId}</code>
               </div>
             )}
           </Section>
@@ -94,33 +94,35 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
               {orch.memory_hits.length === 0 ? (
                 <EmptyState title="No evidence" body="needs_memory was below threshold, or the tenant store is empty." />
               ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th scope="col">ID / Type</th>
-                      <th scope="col">Evidence Text</th>
-                      <th scope="col">Rel</th>
-                      <th scope="col">Safety Flags</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orch.memory_hits.map((h) => (
-                      <tr key={h.id}>
-                        <td>
-                          <div><code>{h.id.slice(0, 8)}</code></div>
-                          <Chip tone="info">{h.type || "doc"}</Chip>
-                        </td>
-                        <td style={{ fontSize: "12px", maxWidth: "260px" }}>{h.text}</td>
-                        <td><strong>{h.relevance.toFixed(2)}</strong></td>
-                        <td className="muted small">
-                          <div>contra: {h.contradicts.toFixed(2)}</div>
-                          <div>inj: {h.has_injection.toFixed(2)}</div>
-                          <div>pii: {h.has_pii.toFixed(2)}</div>
-                        </td>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col" style={{ width: "95px" }}>ID / Type</th>
+                        <th scope="col">Evidence Text</th>
+                        <th scope="col" style={{ width: "50px" }}>Rel</th>
+                        <th scope="col" style={{ width: "110px" }}>Safety Flags</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {orch.memory_hits.map((h) => (
+                        <tr key={h.id}>
+                          <td>
+                            <div style={{ marginBottom: "2px" }}><code>{h.id.slice(0, 8)}</code></div>
+                            <Chip tone="info">{h.type || "doc"}</Chip>
+                          </td>
+                          <td style={{ fontSize: "12px", maxWidth: "260px" }}>{h.text}</td>
+                          <td><strong className="mono">{h.relevance.toFixed(2)}</strong></td>
+                          <td className="small" style={{ fontSize: "11px", color: "var(--muted)" }}>
+                            <div>contra: {h.contradicts.toFixed(2)}</div>
+                            <div>inj: {h.has_injection.toFixed(2)}</div>
+                            <div>pii: {h.has_pii.toFixed(2)}</div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Section>
           </div>

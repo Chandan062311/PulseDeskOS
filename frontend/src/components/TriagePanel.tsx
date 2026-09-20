@@ -100,42 +100,45 @@ export default function TriagePanel({
           <span className="muted">mode: {mode}</span>
         </div>
         {!valid && <p className="muted">Enter a message and sender to enable triage.</p>}
-        <h3>Samples</h3>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">ID</th>
-              <th scope="col">Subject</th>
-              <th scope="col">
-                <span className="sr-only">Load</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {SAMPLES.map((s) => (
-              <tr key={s.id}>
-                <td>{s.id}</td>
-                <td>{s.subject}</td>
-                <td>
-                  <button
-                    className="ghost"
-                    onClick={() =>
-                      setTicket({
-                        subject: s.subject,
-                        message: s.message,
-                        sender: s.sender,
-                        plan: "enterprise",
-                        openOrders: "",
-                      })
-                    }
-                  >
-                    Load
-                  </button>
-                </td>
+        <h3 style={{ fontSize: "12px", fontWeight: 600, color: "var(--ink)", margin: "14px 0 6px" }}>Sample Tickets</h3>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" style={{ width: "80px" }}>ID</th>
+                <th scope="col">Subject</th>
+                <th scope="col" style={{ textAlign: "right", width: "60px" }}>
+                  <span className="sr-only">Load</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {SAMPLES.map((s) => (
+                <tr key={s.id}>
+                  <td><code>{s.id}</code></td>
+                  <td style={{ fontWeight: 500 }}>{s.subject}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <button
+                      className="ghost"
+                      style={{ padding: "2px 8px", fontSize: "11px" }}
+                      onClick={() =>
+                        setTicket({
+                          subject: s.subject,
+                          message: s.message,
+                          sender: s.sender,
+                          plan: "enterprise",
+                          openOrders: "",
+                        })
+                      }
+                    >
+                      Load
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       <Section title="Jev result" hint="Gates: quarantine ≥ 0.60 · review if spam 0.40–0.60 or confidence < 0.75.">
@@ -147,7 +150,7 @@ export default function TriagePanel({
         {triage && !loading && !error && (
           <div aria-live="polite">
             <div className="row" style={{ marginBottom: "12px", alignItems: "center" }}>
-              <strong style={{ fontSize: "1.1rem" }}>{triage.route}</strong>
+              <strong style={{ fontSize: "1.1rem", color: "var(--ink)" }}>{triage.route}</strong>
               <Chip tone={actionTone(triage.action)}>{triage.action}</Chip>
               {isOfflineMock && (
                 <span className="chip chip-warn" title="Result produced by offline mock heuristic">
@@ -158,9 +161,9 @@ export default function TriagePanel({
             {BARS.map(({ key, label }) => (
               <Meter key={key} label={label} value={triage[key]} />
             ))}
-            <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--info-bg)", borderRadius: "var(--radius)" }}>
-              <div className="muted small" style={{ fontWeight: 600, marginBottom: "2px" }}>Triage Reason:</div>
-              <p style={{ margin: 0, fontSize: "13px" }}>{triage.reason}</p>
+            <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--primary-subtle)", border: "1px solid var(--primary-border)", borderRadius: "var(--radius)" }}>
+              <div style={{ fontWeight: 600, fontSize: "11px", color: "var(--primary)", marginBottom: "2px" }}>Triage Reason:</div>
+              <p style={{ margin: 0, fontSize: "12px", color: "var(--ink-secondary)" }}>{triage.reason}</p>
             </div>
           </div>
         )}

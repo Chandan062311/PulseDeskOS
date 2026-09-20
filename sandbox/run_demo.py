@@ -23,11 +23,7 @@ with open("pulsedesk-os/.env", encoding="utf-8") as _env:
         if "=" in _line and not _line.startswith("#"):
             _k, _v = _line.split("=", 1)
             _k, _v = _k.strip(), _v.strip().strip('"')
-            if _k in ("PULSEDESK_API_KEY", "TYPESAFE_API_KEY") and _v not in (
-                "",
-                "your-key-here",
-                "change-me-in-production",
-            ):
+            if _k == "TYPESAFE_API_KEY" and _v not in ("", "your-key-here"):
                 os.environ.setdefault(_k, _v)
 
 PROBLEM_STATEMENT = (
@@ -80,17 +76,11 @@ TICKETS = [
 
 
 def post(path: str, payload: dict) -> dict:
-    """POST JSON and return the decoded body (with API key when set)."""
-    import os
-
-    headers = {"Content-Type": "application/json"}
-    api_key = os.environ.get("PULSEDESK_API_KEY", "")
-    if api_key:
-        headers["X-API-Key"] = api_key
+    """POST JSON and return the decoded body (single-key model: no app auth)."""
     req = urllib.request.Request(
         API + path,
         data=json.dumps(payload).encode(),
-        headers=headers,
+        headers={"Content-Type": "application/json"},
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=120) as res:

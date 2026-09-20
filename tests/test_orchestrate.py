@@ -263,41 +263,31 @@ def test_store_validates_type_and_text() -> None:
     )
 
 
-def test_api_key_gate(monkeypatch) -> None:
-    """Protected routes 401 without the key; healthz stays open."""
+def test_no_app_gate_single_key_model() -> None:
+    """No PULSEDESK gate exists: only the Jev key matters, enforced at Jev calls."""
     from fastapi.testclient import TestClient
 
-    import backend.main as main_mod
+    from backend.main import app
 
-    monkeypatch.setenv("PULSEDESK_API_KEY", "secret123")
-    client = TestClient(main_mod.app)
+    client = TestClient(app)
     assert client.get("/healthz").status_code == 200
-    no_key = client.post("/v1/triage", json={"ticket": {"subject": "s", "message": "m"}})
-    assert no_key.status_code == 401
-    wrong = client.post(
-        "/v1/triage",
-        json={"ticket": {"subject": "s", "message": "m"}},
-        headers={"X-API-Key": "wrong"},
-    )
-    assert wrong.status_code == 401
-    ok_case = client.post(
-        "/v1/triage",
-        json={"ticket": {"subject": "s", "message": "m"}},
-        headers={"X-API-Key": "secret123"},
-    )
-    assert ok_case.status_code == 200
-
-
-def test_auth_open_without_env(monkeypatch) -> None:
-    """Dev mode: no PULSEDESK_API_KEY means no gate (documented)."""
-    from fastapi.testclient import TestClient
-
-    import backend.main as main_mod
-
-    monkeypatch.delenv("PULSEDESK_API_KEY", raising=False)
-    client = TestClient(main_mod.app)
     res = client.post("/v1/triage", json={"ticket": {"subject": "s", "message": "m"}})
     assert res.status_code == 200
+
+
+def test_require_api_key_normalizes_paste_artifacts(monkeypatch) -> None:
+    """Whitespace/quotes/newlines from browser pastes never become the key."""
+    from backend.jev_client import require_api_key
+
+    monkeypatch.setenv("TYPESAFE_API_KEY", '  "abc123"\n')
+    assert require_api_key() == "abc123"
+    monkeypatch.setenv("TYPESAFE_API_KEY", "   ")
+    try:
+        require_api_key()
+    except RuntimeError as exc:
+        assert "TYPESAFE_API_KEY is not set" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError for blank key")
 
 
 def test_delete_requires_tenant(monkeypatch) -> None:

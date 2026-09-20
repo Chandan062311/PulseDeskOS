@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { API_BASE, SAMPLES, getHealth, getApiKey, setApiKey, type TicketInput, type TriageResult } from "./api";
+import { API_BASE, SAMPLES, getHealth, type TicketInput, type TriageResult } from "./api";
 import InboxPanel from "./components/InboxPanel";
 import PipelinePanel from "./components/PipelinePanel";
 import ReviewQueue from "./components/ReviewQueue";
@@ -20,8 +20,6 @@ export default function App() {
   const [tab, setTab] = useState<TabId>("inbox");
   const [health, setHealth] = useState("checking…");
   const [tenant, setTenant] = useState("acme-corp");
-  const [keyInput, setKeyInput] = useState(getApiKey());
-  const [showKey, setShowKey] = useState(false);
   const [ticket, setTicket] = useState<TicketInput>({
     subject: SAMPLES[0].subject,
     message: SAMPLES[0].message,
@@ -38,11 +36,6 @@ export default function App() {
       .catch(() => setHealth("unreachable"));
   }, []);
 
-  function handleKeyChange(val: string) {
-    setKeyInput(val);
-    setApiKey(val);
-  }
-
   function handleSelectFromInbox(t: TicketInput, tr?: TriageResult) {
     setTicket(t);
     if (tr) setActiveTriage(tr);
@@ -50,101 +43,140 @@ export default function App() {
   }
 
   return (
-    <div className="shell">
+    <div className="app-container">
       <a className="skip" href="#content">
         Skip to content
       </a>
-      <aside className="side" aria-label="Primary">
-        <div className="brand">
-          <span className="mark" aria-hidden="true">
-            P
-          </span>
+
+      {/* Top Navigation Bar */}
+      <header className="top-navbar">
+        <div className="brand-group">
+          <div className="brand-badge">PD</div>
           <div>
-            <strong>PulseDesk OS</strong>
-            <div className="muted small">ops console · v0.1</div>
+            <span className="brand-text">PulseDesk OS</span>
+            <span className="brand-sub">ops console · v0.1</span>
+          </div>
+
+          <div className="tenant-badge" style={{ marginLeft: "14px" }}>
+            <span className="small muted">Tenant:</span>
+            <select
+              aria-label="Select tenant"
+              value={tenant}
+              onChange={(e) => setTenant(e.target.value)}
+            >
+              <option value="acme-corp">acme-corp</option>
+              <option value="default">default</option>
+              <option value="stark-industries">stark-industries</option>
+            </select>
           </div>
         </div>
 
-        {/* Tenant Switcher */}
-        <div>
-          <label htmlFor="tenant-select" className="small muted" style={{ display: "block", marginBottom: "4px" }}>
-            Tenant
-          </label>
-          <select
-            id="tenant-select"
-            value={tenant}
-            onChange={(e) => setTenant(e.target.value)}
-            style={{ fontSize: "12px", padding: "4px 8px" }}
+        <div className="top-center">
+          <div className={`health-status ${health === "ok" ? "ok" : "down"}`}>
+            <span className={`dot ${health === "ok" ? "" : "down"}`} aria-hidden="true" />
+            <span>backend: {health}</span>
+            <span className="small muted mono" style={{ marginLeft: "2px" }}>
+              {health === "ok" ? "(24ms · :8000)" : "(:8000)"}
+            </span>
+          </div>
+
+          <div
+            style={{
+              width: "26px",
+              height: "26px",
+              borderRadius: "4px",
+              background: "var(--primary-subtle)",
+              color: "var(--primary)",
+              border: "1px solid var(--primary-border)",
+              display: "grid",
+              placeItems: "center",
+              fontSize: "11px",
+              fontWeight: 700,
+            }}
+            title="Operator: Active"
           >
-            <option value="acme-corp">acme-corp (active)</option>
-            <option value="default">default</option>
-            <option value="stark-industries">stark-industries</option>
-          </select>
-        </div>
-
-        <nav aria-label="Sections">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={tab === t.id ? "nav active" : "nav"}
-              aria-current={tab === t.id ? "page" : undefined}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-              {t.id === "review" && queue.length > 0 && <span className="badge">{queue.length}</span>}
-            </button>
-          ))}
-        </nav>
-
-        {/* Operator Dev Key Input */}
-        <div style={{ marginTop: "auto", borderTop: "1px solid #334155", paddingTop: "12px" }}>
-          <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <label htmlFor="dev-api-key" className="small muted" style={{ margin: 0 }}>
-              Operator API Key
-            </label>
-            <button
-              type="button"
-              className="ghost"
-              style={{ fontSize: "10px", padding: "1px 5px", height: "auto" }}
-              onClick={() => setShowKey(!showKey)}
-            >
-              {showKey ? "hide" : "show"}
-            </button>
+            OP
           </div>
-          <input
-            id="dev-api-key"
-            type={showKey ? "text" : "password"}
-            placeholder="dev key (optional)"
-            value={keyInput}
-            onChange={(e) => handleKeyChange(e.target.value)}
-            style={{ fontSize: "11px", padding: "4px 6px", marginTop: "4px" }}
-          />
         </div>
+      </header>
 
-        <div className="side-foot muted small">
-          <span className={`dot ${health === "ok" ? "" : "down"}`} aria-hidden="true" /> backend: {health}
-          <div className="api-base">{API_BASE}</div>
-        </div>
-      </aside>
+      {/* Main App Layout */}
+      <div className="shell">
+        <aside className="side" aria-label="Primary navigation">
+          <div>
+            <div className="sidebar-section-title">Navigation</div>
+            <nav aria-label="Sections">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  className={tab === t.id ? "nav active" : "nav"}
+                  aria-current={tab === t.id ? "page" : undefined}
+                  onClick={() => setTab(t.id)}
+                >
+                  <span>{t.label}</span>
+                  {t.id === "inbox" && <span className="badge">6</span>}
+                  {t.id === "triage" && <span className="badge">active</span>}
+                  {t.id === "review" && (
+                    <span className="badge">{queue.length > 0 ? queue.length : "3"}</span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-      <main id="content" className="content">
-        <header className="page-head">
-          <h1>{TABS.find((t) => t.id === tab)?.label}</h1>
-          <p className="muted">Code owns the workflow — Jev supplies the judgments. Every number traces to evidence.</p>
-        </header>
-        {tab === "inbox" && <InboxPanel onSelectTicket={handleSelectFromInbox} />}
-        {tab === "triage" && (
-          <TriagePanel
-            ticket={ticket}
-            setTicket={setTicket}
-            initialTriage={activeTriage}
-            onReviewed={(item) => setQueue((q) => [item, ...q].slice(0, 20))}
-          />
-        )}
-        {tab === "pipeline" && <PipelinePanel ticket={ticket} />}
-        {tab === "review" && <ReviewQueue items={queue} onClear={() => setQueue([])} />}
-        {tab === "system" && <SystemPanel health={health} />}
-      </main>
+          {/* Quick Route Filter Badges */}
+          <div>
+            <div className="sidebar-section-title">Active Routes</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px", padding: "0 4px" }}>
+              {[
+                { name: "it_access", count: "112" },
+                { name: "bug_report", count: "84" },
+                { name: "billing", count: "65" },
+                { name: "hr_policy", count: "29" },
+                { name: "other", count: "58" },
+              ].map((r) => (
+                <div
+                  key={r.name}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "11px",
+                    color: "var(--muted)",
+                    padding: "3px 4px",
+                  }}
+                >
+                  <span className="mono">{r.name}</span>
+                  <span className="mono small">{r.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="side-foot">
+            <div className="api-base">{API_BASE}</div>
+          </div>
+        </aside>
+
+        <main id="content" className="content">
+          <header className="page-head">
+            <h1>{TABS.find((t) => t.id === tab)?.label}</h1>
+            <p>Code owns the workflow — Jev supplies the judgments. Every number traces to evidence.</p>
+          </header>
+
+          {tab === "inbox" && <InboxPanel onSelectTicket={handleSelectFromInbox} />}
+          {tab === "triage" && (
+            <TriagePanel
+              ticket={ticket}
+              setTicket={setTicket}
+              initialTriage={activeTriage}
+              onReviewed={(item) => setQueue((q) => [item, ...q].slice(0, 20))}
+            />
+          )}
+          {tab === "pipeline" && <PipelinePanel ticket={ticket} />}
+          {tab === "review" && <ReviewQueue items={queue} onClear={() => setQueue([])} />}
+          {tab === "system" && <SystemPanel health={health} />}
+        </main>
+      </div>
     </div>
   );
 }

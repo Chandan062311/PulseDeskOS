@@ -59,14 +59,14 @@ carries `X-Request-Id` and structured latency logs.
 
 ## Production run
 
-Segregation: secrets in `.env` (never git), data in the `pddata` volume,
-code in images. `/healthz` is open for probes; everything else needs
-`X-API-Key: $PULSEDESK_API_KEY` (leave empty only for local dev).
+Segregation: one secret in `.env` (the Jev key — never git), data in the
+`pddata` volume, code in images. Per-IP rate limiting (120/min) guards the
+live Jev routes against runaway bills.
 
 ```bash
-cp .env.example .env  # set TYPESAFE_API_KEY + PULSEDESK_API_KEY
+cp .env.example .env  # set TYPESAFE_API_KEY only
 docker compose up --build -d   # api :8000 (4 workers, WAL sqlite) + ui :8080
-./scripts/smoke.sh             # with PULSEDESK_API_KEY exported
+./scripts/smoke.sh
 ./scripts/backup.sh ./backups  # online snapshot via MEMORY_DB
 docker build -t pulsedesk-os:1.0 .            # verified 216MB
 docker build -t pulsedesk-ui:1.0 ./frontend   # verified 63MB

@@ -113,19 +113,19 @@ export default function ReviewQueue({
       <div
         className="card"
         style={{
-          background: "var(--info-bg)",
-          border: "1px solid var(--primary)",
-          padding: "12px 16px",
+          background: "var(--primary-subtle)",
+          borderColor: "var(--primary-border)",
+          padding: "10px 14px",
         }}
       >
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <strong>Active Gating Criteria:</strong>
+            <strong style={{ color: "var(--ink)", fontSize: "12px" }}>Active Gating Criteria:</strong>
             <span className="small muted" style={{ marginLeft: "8px" }}>
               Policy thresholds triggering operator review
             </span>
           </div>
-          <div className="row">
+          <div className="row" style={{ gap: "6px" }}>
             <span className="chip chip-info">Confidence &lt; 0.75</span>
             <span className="chip chip-warn">Spam Band 0.40 – 0.60</span>
             <span className="chip chip-info">Route: other (always)</span>
@@ -134,10 +134,10 @@ export default function ReviewQueue({
       </div>
 
       {resolvedStatus && (
-        <div className="card" style={{ background: "var(--ok-bg)", border: "1px solid var(--ok)", padding: "10px 14px" }}>
+        <div className="card" style={{ background: "var(--ok-bg)", borderColor: "var(--ok-border)", padding: "10px 14px" }}>
           <div className="row" style={{ justifyContent: "space-between" }}>
             <span style={{ color: "var(--ok)", fontWeight: 600 }}>{resolvedStatus}</span>
-            <button className="ghost" style={{ padding: "2px 8px", fontSize: "12px" }} onClick={() => setResolvedStatus(null)}>
+            <button className="ghost" style={{ padding: "2px 8px", fontSize: "11px" }} onClick={() => setResolvedStatus(null)}>
               Dismiss
             </button>
           </div>
@@ -150,17 +150,19 @@ export default function ReviewQueue({
           title={`Review Queue (${rows.length})`}
           hint="Tickets gated for manual review. Click a row to inspect and resolve."
         >
-          <div className="row actions" style={{ marginBottom: "10px" }}>
-            <label htmlFor="action-filter" className="sr-only">Filter by action</label>
-            <select id="action-filter" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}>
-              <option value="all">All Exceptions ({allQueueItems.length})</option>
-              <option value="human_review">human_review</option>
-              <option value="quarantine_spam">quarantine_spam</option>
-              <option value="auto_route">auto_route</option>
-            </select>
+          <div className="row actions" style={{ marginBottom: "10px", justifyContent: "space-between" }}>
+            <div className="row" style={{ gap: "6px" }}>
+              <label htmlFor="action-filter" className="sr-only">Filter by action</label>
+              <select id="action-filter" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}>
+                <option value="all">All Exceptions ({allQueueItems.length})</option>
+                <option value="human_review">human_review</option>
+                <option value="quarantine_spam">quarantine_spam</option>
+                <option value="auto_route">auto_route</option>
+              </select>
+            </div>
             {items.length > 0 && (
-              <button className="ghost" onClick={onClear}>
-                Clear Session Items
+              <button className="ghost" style={{ padding: "3px 8px", fontSize: "11px" }} onClick={onClear}>
+                Clear Session
               </button>
             )}
           </div>
@@ -171,60 +173,62 @@ export default function ReviewQueue({
               body="No tickets currently meet human review or quarantine criteria."
             />
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Subject</th>
-                  <th scope="col">Predicted Route</th>
-                  <th scope="col">Conf</th>
-                  <th scope="col">Spam</th>
-                  <th scope="col">Gate Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((q, i) => {
-                  const isSelected = selectedItem === q;
-                  return (
-                    <tr
-                      key={`${q.sample.id}-${i}`}
-                      onClick={() => {
-                        setSelectedIndex(i);
-                        setResolvedStatus(null);
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        background: isSelected ? "var(--info-bg)" : undefined,
-                        outline: isSelected ? "2px solid var(--primary)" : undefined,
-                      }}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Predicted Route</th>
+                    <th scope="col">Conf</th>
+                    <th scope="col">Spam</th>
+                    <th scope="col">Gate Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((q, i) => {
+                    const isSelected = selectedItem === q;
+                    return (
+                      <tr
+                        key={`${q.sample.id}-${i}`}
+                        onClick={() => {
                           setSelectedIndex(i);
                           setResolvedStatus(null);
-                        }
-                      }}
-                    >
-                      <td>
-                        <strong>{q.sample.subject || "(no subject)"}</strong>
-                        <div className="muted small">{q.sample.sender}</div>
-                      </td>
-                      <td>
-                        <Chip tone="info">{q.triage.route}</Chip>
-                      </td>
-                      <td>{q.triage.route_confidence.toFixed(2)}</td>
-                      <td>
-                        <span className={q.triage.spam_risk >= 0.4 ? "chip chip-warn" : "chip chip-ok"}>
-                          {q.triage.spam_risk.toFixed(2)}
-                        </span>
-                      </td>
-                      <td className="small" style={{ maxWidth: "160px" }}>
-                        <Chip tone={actionTone(q.triage.action)}>{q.triage.action}</Chip>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          background: isSelected ? "var(--primary-subtle)" : undefined,
+                          borderLeft: isSelected ? "3px solid var(--primary)" : "3px solid transparent",
+                        }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            setSelectedIndex(i);
+                            setResolvedStatus(null);
+                          }
+                        }}
+                      >
+                        <td>
+                          <strong style={{ color: "var(--ink)" }}>{q.sample.subject || "(no subject)"}</strong>
+                          <div className="muted small">{q.sample.sender}</div>
+                        </td>
+                        <td>
+                          <Chip tone="info">{q.triage.route}</Chip>
+                        </td>
+                        <td className="mono">{q.triage.route_confidence.toFixed(2)}</td>
+                        <td>
+                          <Chip tone={q.triage.spam_risk >= 0.4 ? "warn" : "ok"}>
+                            {q.triage.spam_risk.toFixed(2)}
+                          </Chip>
+                        </td>
+                        <td className="small">
+                          <Chip tone={actionTone(q.triage.action)}>{q.triage.action}</Chip>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </Section>
 
@@ -233,18 +237,18 @@ export default function ReviewQueue({
           {selectedItem ? (
             <div className="stack">
               <div>
-                <strong>Subject:</strong> {selectedItem.sample.subject}
+                <strong style={{ color: "var(--ink)" }}>{selectedItem.sample.subject}</strong>
                 <div className="muted small">Sender: {selectedItem.sample.sender}</div>
               </div>
 
-              <div style={{ background: "#f8fafc", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "10px" }}>
+              <div style={{ background: "var(--surface-secondary)", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "10px" }}>
                 <div className="muted small" style={{ fontWeight: 600, marginBottom: "4px" }}>Message Body:</div>
-                <div style={{ fontSize: "13px" }}>{selectedItem.sample.message}</div>
+                <div style={{ fontSize: "12px", color: "var(--ink)" }}>{selectedItem.sample.message}</div>
               </div>
 
-              <div style={{ background: "var(--info-bg)", borderRadius: "var(--radius)", padding: "8px 10px" }}>
-                <div className="muted small" style={{ fontWeight: 600 }}>Trigger Diagnostic:</div>
-                <div className="small" style={{ marginTop: "2px" }}>{selectedItem.triage.reason}</div>
+              <div style={{ background: "var(--primary-subtle)", border: "1px solid var(--primary-border)", borderRadius: "var(--radius)", padding: "8px 10px" }}>
+                <div style={{ fontWeight: 600, fontSize: "11px", color: "var(--primary)" }}>Trigger Diagnostic:</div>
+                <div className="small" style={{ marginTop: "2px", color: "var(--ink-secondary)" }}>{selectedItem.triage.reason}</div>
               </div>
 
               <div>
@@ -263,7 +267,7 @@ export default function ReviewQueue({
               </div>
 
               <div>
-                <label htmlFor="audit-note">Operator Audit Note (logged to immutable audit trail)</label>
+                <label htmlFor="audit-note">Operator Audit Note (immutable audit trail)</label>
                 <textarea
                   id="audit-note"
                   rows={3}
@@ -281,7 +285,7 @@ export default function ReviewQueue({
                 </button>
                 <button
                   className="ghost"
-                  style={{ color: "var(--bad)" }}
+                  style={{ color: "var(--bad)", borderColor: "var(--bad-border)" }}
                   onClick={() => handleResolve("Quarantine as Spam")}
                 >
                   Quarantine as Spam

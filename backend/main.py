@@ -10,7 +10,6 @@ Endpoints:
 
 from __future__ import annotations
 
-import hmac
 import logging
 import os
 import threading
@@ -49,18 +48,21 @@ logger = logging.getLogger("pulsedesk")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
-def log_auth_mode() -> None:
-    """Log once whether the API gate is enforced (call at startup)."""
-    if os.environ.get("PULSEDESK_API_KEY"):
-        logger.info("auth enforced (PULSEDESK_API_KEY set)")
-    else:
-        logger.warning("auth DISABLED: PULSEDESK_API_KEY unset — local dev mode only")
+def log_jev_status() -> None:
+    """Log once whether live Jev is configured (call at startup)."""
+    from .jev_client import require_api_key
+
+    try:
+        key = require_api_key()
+        logger.info("jev live (key %s…%s)", key[:7], key[-4:])
+    except RuntimeError:
+        logger.warning("jev OFFLINE: TYPESAFE_API_KEY unset — live routes will 503")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Startup hook: report the auth posture exactly once."""
-    log_auth_mode()
+    """Startup hook: report Jev key posture exactly once (never blocks)."""
+    log_jev_status()
     yield
 
 
@@ -125,28 +127,6 @@ async def request_id_middleware(
     logger.info("%s %s %s %.1fms", request_id, request.method, request.url.path, elapsed_ms)
     response.headers["X-Request-Id"] = request_id
     return response
-
-
-@app.middleware("http")
-async def api_key_middleware(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
-    """API-key gate for everything except the liveness probe.
-
-    Key from ``PULSEDESK_API_KEY`` via the ``X-API-Key`` header, compared in
-    constant time. When the env var is unset, auth is disabled (local dev) —
-    tests and offline demos rely on this; the open mode is logged loudly at
-    startup (see ``log_auth_mode``). Secrets never touch code or git.
-    """
-    if request.url.path == "/healthz":
-        return await call_next(request)
-    expected = os.environ.get("PULSEDESK_API_KEY", "")
-    if not expected:
-        return await call_next(request)
-    presented = request.headers.get("x-api-key", "")
-    if not hmac.compare_digest(presented, expected):
-        return JSONResponse(status_code=401, content={"detail": "Invalid or missing API key."})  # type: ignore[return-value]
-    return await call_next(request)
 
 
 _RATE_WINDOW_S = 60.0

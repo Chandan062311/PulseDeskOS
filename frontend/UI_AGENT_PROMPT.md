@@ -49,8 +49,8 @@ suggested follow-ups, and act on the accepted ones via `edit_screens`
 1. Download each final screen's HTML + screenshot into `frontend/stitch/`
    (`inbox.html`, `triage-detail.html`, `review-queue.html`, plus `.png`s).
 2. Wire the live data contract (read-only): backend base = `VITE_API` env or
-   `http://localhost:8000`, optional `X-API-Key` header (ask the operator for
-   the dev key; never hardcode or commit one).
+   `http://localhost:8000`. No app auth header exists — single-key model, only
+   the server-side Jev key matters.
    - `GET /healthz` → status dot (open endpoint).
    - `POST /v1/triage?live=true` → route badge, confidence/spam/urgency/
      frustration/needs-memory/refund/pii bars, action chip, reason text.

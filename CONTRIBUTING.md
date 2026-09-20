@@ -24,7 +24,7 @@ make setup   # venv + deps + frontend install + .env from template
 make test    # pytest + ruff check + mypy (backend strict)
 (cd frontend && npm run build)
 claude plugin validate .
-./scripts/smoke.sh   # needs API on :8000 (make api) + PULSEDESK_API_KEY exported
+./scripts/smoke.sh   # needs API on :8000 (make api)
 ```
 
 ## Adding things

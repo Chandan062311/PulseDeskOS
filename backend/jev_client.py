@@ -34,8 +34,14 @@ def get_jev_model(config: dict[str, Any] | None = None) -> str:
 
 
 def require_api_key() -> str:
-    """Return TYPESAFE_API_KEY or raise with helpful message."""
-    key = os.environ.get("TYPESAFE_API_KEY", "")
+    """Return a normalized ``TYPESAFE_API_KEY`` or raise with guidance.
+
+    Normalization (strip whitespace/quotes/newlines) exists because keys are
+    usually pasted from a browser into ``.env`` — trailing newlines are the
+    classic silent failure. Empty-after-strip counts as missing.
+    """
+    raw = os.environ.get("TYPESAFE_API_KEY", "")
+    key = raw.strip().strip("\"'")
     if not key:
         raise RuntimeError(
             "TYPESAFE_API_KEY is not set. Copy .env.example and "

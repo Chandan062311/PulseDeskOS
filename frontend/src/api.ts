@@ -58,28 +58,9 @@ export class ApiError extends Error {
 const ENV = (import.meta as unknown as { env: Record<string, string> }).env ?? {};
 export const API_BASE = ENV.VITE_API ?? "http://localhost:8000";
 
-let currentApiKey: string = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("pulsedesk_api_key") || "" : "";
-
-export function setApiKey(key: string) {
-  currentApiKey = key;
-  if (typeof sessionStorage !== "undefined") {
-    if (key) {
-      sessionStorage.setItem("pulsedesk_api_key", key);
-    } else {
-      sessionStorage.removeItem("pulsedesk_api_key");
-    }
-  }
-}
-
-export function getApiKey(): string {
-  return currentApiKey;
-}
-
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  // Single-key model: only the server-side Jev key exists. No app auth header.
   const headers = new Headers(init?.headers);
-  if (currentApiKey.trim()) {
-    headers.set("X-API-Key", currentApiKey.trim());
-  }
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${path}`, { ...init, headers });
