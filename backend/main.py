@@ -21,6 +21,7 @@ from functools import lru_cache
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import Field
 
@@ -67,6 +68,36 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="PulseDesk OS", lifespan=lifespan)
+
+# Browser calls from the console (:5173 dev, :8080 prod) are cross-origin.
+# Origins are configurable; same-origin deployments need none of this.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origin.strip()
+        for origin in os.environ.get(
+            "PULSEDESK_CORS_ORIGINS", "http://localhost:5173,http://localhost:8080"
+        ).split(",")
+        if origin.strip()
+    ],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
+
+# Browser calls from the console (:5173 dev, :8080 prod) are cross-origin.
+# Origins are configurable; same-origin deployments need none of this.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origin.strip()
+        for origin in os.environ.get(
+            "PULSEDESK_CORS_ORIGINS", "http://localhost:5173,http://localhost:8080"
+        ).split(",")
+        if origin.strip()
+    ],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 
 class TriageRequest(Frozen):
