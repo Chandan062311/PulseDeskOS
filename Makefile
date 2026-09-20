@@ -41,7 +41,7 @@ build-ui:
 	cd frontend && npm run build
 
 mcp:
-	$(PY) -m backend.mcp_server
+	$(PY) -m backend.mcp_server   # needs `make setup` first (fastmcp lives in .venv)
 
 secrets:
 	bash scripts/check-secrets.sh .
