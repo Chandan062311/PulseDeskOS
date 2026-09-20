@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PulseDesk OS - Operations Console</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Public+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-surface": "#30323b",
+            "primary-fixed": "#b3c2f7",
+            "error-container": "#fa746f",
+            "surface-tint": "#4f5d8c",
+            "primary-container": "#b3c2f7",
+            "primary-fixed-dim": "#a6b4e8",
+            "secondary": "#595e72",
+            "surface-container-lowest": "#ffffff",
+            "surface-container": "#eeedf6",
+            "on-primary-fixed-variant": "#374572",
+            "error-dim": "#67040d",
+            "secondary-fixed-dim": "#cfd3eb",
+            "on-error-container": "#6e0a12",
+            "on-tertiary-fixed-variant": "#604a71",
+            "on-surface-variant": "#5d5f68",
+            "surface-bright": "#faf8fe",
+            "secondary-container": "#dde1f9",
+            "outline-variant": "#b0b1bc",
+            "on-error": "#fff7f6",
+            "surface-dim": "#d9d9e4",
+            "on-primary-container": "#2d3c68",
+            "tertiary-container": "#e6cafa",
+            "surface-container-low": "#f4f3fa",
+            "secondary-fixed": "#dde1f9",
+            "inverse-on-surface": "#9d9ca2",
+            "background": "#faf8fe",
+            "on-secondary-fixed-variant": "#565b6f",
+            "on-tertiary": "#fff6fe",
+            "on-secondary-container": "#4c5164",
+            "tertiary-dim": "#604a72",
+            "surface-container-high": "#e8e7f1",
+            "error": "#a83836",
+            "primary": "#4f5d8c",
+            "inverse-primary": "#b3c2f7",
+            "surface-variant": "#e1e2ed",
+            "on-secondary-fixed": "#393f51",
+            "surface-container-highest": "#e1e2ed",
+            "on-primary-fixed": "#182853",
+            "on-primary": "#faf8ff",
+            "secondary-dim": "#4d5266",
+            "tertiary-fixed-dim": "#d8bceb",
+            "on-tertiary-fixed": "#422d53",
+            "inverse-surface": "#0d0e12",
+            "on-secondary": "#faf8ff",
+            "outline": "#797a84",
+            "tertiary-fixed": "#e6cafa",
+            "tertiary": "#6d567f",
+            "on-tertiary-container": "#564067",
+            "surface": "#faf8fe",
+            "on-background": "#30323b",
+            "primary-dim": "#43517f"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            "headline": ["Inter", "sans-serif"],
+            "display": ["Inter", "sans-serif"],
+            "body": ["Inter", "sans-serif"],
+            "label": ["Public Sans", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="h-full bg-background font-body text-on-surface flex flex-col antialiased overflow-hidden select-none">
+<!-- TopNavBar (Shared Component compliant) -->
+<header class="w-full h-12 flex items-center justify-between px-4 sticky top-0 z-50 bg-surface-container-low border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-6">
+<!-- Product Brand -->
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center font-headline font-bold text-xs">
+          PD
+        </div>
+<span class="font-headline text-base font-bold text-on-surface tracking-tight">PulseDesk OS</span>
+</div>
+<!-- Tenant Selector -->
+<div class="flex items-center gap-1.5 pl-2 border-l border-outline-variant text-xs">
+<span class="font-label text-xs uppercase tracking-wider text-on-surface-variant">Tenant:</span>
+<select class="bg-surface-container-lowest border border-outline-variant text-on-surface font-body text-xs rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+<option selected="" value="acme-corp">acme-corp</option>
+<option value="default">default</option>
+<option value="stark-industries">stark-industries</option>
+</select>
+</div>
+<!-- Backend Health Indicator -->
+<div class="hidden lg:flex items-center gap-2 px-2.5 py-0.5 rounded bg-surface-container-lowest border border-outline-variant text-xs">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="font-medium text-on-surface">backend: ok</span>
+<span class="text-on-surface-variant font-mono text-[11px]">(24ms • v4.8)</span>
+</div>
+<!-- Search Bar -->
+<div class="relative hidden sm:block w-64">
+<span class="material-symbols-outlined absolute left-2 top-2 text-outline text-[16px]">search</span>
+<input class="w-full h-7 pl-7 pr-2 bg-surface-container-lowest border border-outline-variant rounded text-xs text-on-surface placeholder:text-outline-variant focus:outline-none focus:ring-1 focus:ring-primary font-body" placeholder="Search ticket, sender, ID..." type="text"/>
+</div>
+</div>
+<!-- Top Links & Actions -->
+<div class="flex items-center gap-4">
+<nav class="hidden md:flex items-center gap-4 text-xs font-label">
+<a class="text-primary font-semibold border-b-2 border-primary pb-1" href="#">Operations</a>
+<a class="text-on-surface-variant hover:text-on-surface pb-1 transition-colors duration-150" href="#">Routing Engine</a>
+<a class="text-on-surface-variant hover:text-on-surface pb-1 transition-colors duration-150" href="#">Triage Models</a>
+<a class="text-on-surface-variant hover:text-on-surface pb-1 transition-colors duration-150" href="#">Audit Logs</a>
+</nav>
+<div class="flex items-center gap-2 pl-3 border-l border-outline-variant text-on-surface-variant">
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface" title="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface" title="Settings">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors text-on-surface-variant hover:text-on-surface" title="Help">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-7 h-7 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-semibold text-xs border border-outline-variant ml-1 cursor-pointer">
+          OP
+        </div>
+</div>
+</div>
+</header>
+<!-- Shell Body -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Left SideNavBar (Shared Component compliant) -->
+<aside class="w-64 h-full bg-surface-container-lowest border-r border-outline-variant flex flex-col justify-between py-3 shrink-0">
+<div class="flex flex-col gap-4 overflow-y-auto px-2">
+<!-- Sidebar Header -->
+<div class="px-2 pt-1">
+<div class="font-headline text-xs font-semibold text-on-surface uppercase tracking-wider">Triage Filters</div>
+<div class="text-[11px] text-on-surface-variant">Active Engine: v4.8-live</div>
+</div>
+<!-- Primary Navigation -->
+<nav class="flex flex-col gap-0.5 text-xs font-body">
+<a class="flex items-center justify-between px-3 py-1.5 rounded-none text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">inbox</span>
+<span>Inbox</span>
+</div>
+<span class="text-[11px] text-outline font-mono">1,420</span>
+</a>
+<a class="flex items-center justify-between px-3 py-1.5 rounded-none bg-surface-container text-primary font-medium border-l-2 border-primary" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">rule</span>
+<span>Triage</span>
+</div>
+<span class="text-[11px] font-mono bg-primary text-on-primary px-1.5 py-0.2 rounded">348</span>
+</a>
+<a class="flex items-center justify-between px-3 py-1.5 rounded-none text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">alt_route</span>
+<span>Pipeline</span>
+</div>
+</a>
+<a class="flex items-center justify-between px-3 py-1.5 rounded-none text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Review</span>
+</div>
+<span class="text-[11px] text-outline font-mono">42</span>
+</a>
+<a class="flex items-center justify-between px-3 py-1.5 rounded-none text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined">tune</span>
+<span>System</span>
+</div>
+</a>
+</nav>
+<!-- Route Filters Section -->
+<div>
+<div class="px-3 pb-1 font-headline text-[11px] font-semibold text-outline uppercase tracking-wider">
+            Route Filters
+          </div>
+<div class="flex flex-col gap-0.5 text-xs">
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="font-mono text-[11px]">it_access</span>
+<span class="text-[11px] text-outline font-mono">112</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="font-mono text-[11px]">bug_report</span>
+<span class="text-[11px] text-outline font-mono">84</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="font-mono text-[11px]">billing</span>
+<span class="text-[11px] text-outline font-mono">65</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="font-mono text-[11px]">hr_policy</span>
+<span class="text-[11px] text-outline font-mono">29</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="font-mono text-[11px]">other</span>
+<span class="text-[11px] text-outline font-mono">58</span>
+</button>
+</div>
+</div>
+<!-- Action Filters Section -->
+<div>
+<div class="px-3 pb-1 font-headline text-[11px] font-semibold text-outline uppercase tracking-wider">
+            Action Filters
+          </div>
+<div class="flex flex-col gap-0.5 text-xs">
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>auto_route</span>
+</span>
+<span class="text-[11px] text-outline font-mono">218</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>human_review</span>
+</span>
+<span class="text-[11px] text-outline font-mono">98</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-1 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded transition-colors text-left">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span>quarantine_spam</span>
+</span>
+<span class="text-[11px] text-outline font-mono">32</span>
+</button>
+</div>
+</div>
+</div>
+<!-- CTA & Footer tabs -->
+<div class="px-3 pt-2 border-t border-outline-variant flex flex-col gap-2">
+<button class="w-full py-1.5 px-3 bg-surface-container border border-outline-variant hover:bg-surface-container-high text-on-surface text-xs font-semibold rounded flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[15px]">refresh</span>
+          Re-classify Batch
+        </button>
+<div class="flex flex-col gap-1 text-[11px] text-on-surface-variant">
+<a class="flex items-center gap-2 px-1 py-1 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[14px]">analytics</span>
+<span>Model Performance</span>
+</a>
+<a class="flex items-center gap-2 px-1 py-1 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+<span>Routing Diagnostics</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Workspace Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface overflow-hidden">
+<!-- Table Controls Bar -->
+<div class="h-10 border-b border-outline-variant bg-surface-container-lowest px-4 flex items-center justify-between shrink-0 text-xs">
+<div class="flex items-center gap-3">
+<span class="font-headline font-semibold text-on-surface">Live Inbound Triage Stream</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant text-[11px] font-mono">348 pending triage</span>
+<span class="text-[11px] text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">history</span> Updated 3s ago
+          </span>
+</div>
+<div class="flex items-center gap-2">
+<!-- View Density Toggle -->
+<div class="flex items-center border border-outline-variant rounded overflow-hidden">
+<button class="px-2 py-0.5 bg-surface-container text-on-surface text-[11px] font-medium" title="Dense View">Compact</button>
+<button class="px-2 py-0.5 bg-surface-container-lowest text-on-surface-variant hover:text-on-surface text-[11px]" title="Normal View">Cozy</button>
+</div>
+<!-- Action Buttons -->
+<button class="flex items-center gap-1 px-2 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[14px]">filter_list</span>
+<span>Filter</span>
+</button>
+<button class="flex items-center gap-1 px-2 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[14px]">download</span>
+<span>Export CSV</span>
+</button>
+</div>
+</div>
+<!-- High-Density Data Table Viewport -->
+<div class="flex-1 overflow-auto bg-surface-container-lowest">
+<table class="w-full border-collapse text-left text-xs">
+<thead class="sticky top-0 bg-surface-container-low border-b border-outline-variant text-[11px] font-headline text-on-surface-variant uppercase tracking-wider z-10">
+<tr>
+<th class="py-2 px-3 w-8 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</th>
+<th class="py-2 px-3">Subject &amp; Ticket ID</th>
+<th class="py-2 px-3">Sender</th>
+<th class="py-2 px-3">Route Category</th>
+<th class="py-2 px-3 w-36">Confidence</th>
+<th class="py-2 px-3 w-24">Spam Risk</th>
+<th class="py-2 px-3 w-28">Urgency</th>
+<th class="py-2 px-3">Action Intent</th>
+<th class="py-2 px-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant text-on-surface font-body">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8924</span>
+<span class="font-medium text-on-surface">Kubernetes cluster token expired in prod-us-east-1</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">All pods failing auth handshakes with API gateway node...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">j.doe@megacorp.io</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">it_access</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 96%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.96</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.01 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 5/5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-primary-container text-on-primary-container">auto_route</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8925</span>
+<span class="font-medium text-on-surface">Invoice dispute for Q3 seat adjustments</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">We were billed for 45 deactivated contractor accounts on July...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">marcus@fintech.co</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">billing</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 88%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.88</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.03 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 3/5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-primary-container text-on-primary-container">auto_route</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-low/30">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8926</span>
+<span class="font-medium text-on-surface">Memory leak on webhook dispatcher daemon</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">OOM killer triggering every 4 hours under heavy ingestion...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">s.chen@cloudnode.dev</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">bug_report</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-tertiary h-full rounded" style="width: 62%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.62</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.05 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 4/5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-tertiary-container text-on-tertiary-container">human_review</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8927</span>
+<span class="font-medium text-on-surface">Remote work policy stipend approval question</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">Does the ergonomic desk allowance rollover to next calendar...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">alex.rivera@internal.org</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">hr_policy</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 93%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.93</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.00 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 1/5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-primary-container text-on-primary-container">auto_route</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors bg-error/5">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8928</span>
+<span class="font-medium text-on-surface">URGENT: Verify crypto payroll credentials now</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">Please follow this external link to validate your employee...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-error font-medium">sec-alert@payroll-update.xyz</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">other</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-error h-full rounded" style="width: 98%"></div>
+</div>
+<span class="font-mono text-[11px] text-error font-semibold">0.98</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-error font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 0.99 (High)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 1/5 (Spam)">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-error-container text-on-error-container">quarantine_spam</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8929</span>
+<span class="font-medium text-on-surface">SSO SAML Assertion signature mismatch</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">Okta connector returns invalid certificate thumbprint on idp...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">k.vance@enterprise-sys.net</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">it_access</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 91%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.91</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.02 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 4/5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-primary-container text-on-primary-container">auto_route</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8930</span>
+<span class="font-medium text-on-surface">UI dropdown freeze on Safari 17.4</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">Reproduction steps: open tenant settings, switch language twice...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">tanya.m@frontend-qa.io</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">bug_report</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 87%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.87</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-secondary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 0.01 (Low)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 2/5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-primary-container text-on-primary-container">auto_route</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 8 -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-low/30">
+<td class="py-2 px-3 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] text-outline font-semibold bg-surface-container px-1 py-0.2 rounded">#PD-8931</span>
+<span class="font-medium text-on-surface">Vendor W-9 tax documentation request</span>
+</div>
+<div class="text-[11px] text-on-surface-variant truncate max-w-sm">Please send revised EIN certification for accounts payable fiscal...</div>
+</td>
+<td class="py-2 px-3 font-mono text-[11px] text-on-surface-variant">accounting@partnercorp.com</td>
+<td class="py-2 px-3">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface font-medium border border-outline-variant">billing</span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-tertiary h-full rounded" style="width: 74%"></div>
+</div>
+<span class="font-mono text-[11px] text-on-surface-variant">0.74</span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] text-tertiary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> 0.35 (Med)
+                </span>
+</td>
+<td class="py-2 px-3">
+<div class="flex items-center gap-1" title="Urgency: 2/5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+<span class="w-2 h-2 rounded-full bg-surface-dim"></span>
+</div>
+</td>
+<td class="py-2 px-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-tertiary-container text-on-tertiary-container">human_review</span>
+</td>
+<td class="py-2 px-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="px-2 py-0.5 border border-outline-variant rounded bg-surface-container-lowest hover:bg-surface-container font-medium text-[11px]">Open</button>
+<button class="p-0.5 rounded text-outline hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="h-9 border-t border-outline-variant bg-surface-container-lowest px-4 flex items-center justify-between text-xs text-on-surface-variant shrink-0">
+<div>
+          Showing <span class="font-semibold text-on-surface">1 - 8</span> of 348 triage candidates
+        </div>
+<div class="flex items-center gap-2">
+<button class="px-2 py-0.5 border border-outline-variant rounded text-outline disabled:opacity-50" disabled="">Previous</button>
+<span class="font-mono text-[11px]">Page 1 / 44</span>
+<button class="px-2 py-0.5 border border-outline-variant rounded hover:bg-surface-container text-on-surface">Next</button>
+</div>
+</div>
+</main>
+<!-- Right-side Summary Metrics (Ops KPI Rail) -->
+<aside class="w-80 h-full bg-surface-container-low border-l border-outline-variant flex flex-col justify-between overflow-y-auto shrink-0 p-4 gap-4">
+<div class="flex flex-col gap-4">
+<!-- Rail Header -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-2">
+<div class="font-headline text-xs font-semibold text-on-surface uppercase tracking-wider">
+            Live Triage Summary
+          </div>
+<span class="font-mono text-[11px] text-outline">14:02:49 UTC</span>
+</div>
+<!-- Metric 1: Volume Today -->
+<div class="p-3 bg-surface-container-lowest border border-outline-variant rounded flex flex-col gap-1">
+<div class="text-[11px] font-headline text-on-surface-variant">Triage Volume Today</div>
+<div class="flex items-baseline justify-between">
+<span class="text-xl font-headline font-bold text-on-surface tracking-tight">4,892</span>
+<span class="text-[11px] font-medium text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">trending_up</span> +12.4% avg
+            </span>
+</div>
+<div class="text-[10px] text-outline">Processed via 12 parallel edge inference workers</div>
+</div>
+<!-- Metric 2: Auto-routed -->
+<div class="p-3 bg-surface-container-lowest border border-outline-variant rounded flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-headline text-on-surface-variant">% Auto-routed</span>
+<span class="text-[11px] font-mono text-primary font-semibold">Target ≥ 70%</span>
+</div>
+<div class="flex items-baseline justify-between">
+<span class="text-xl font-headline font-bold text-on-surface tracking-tight">71.8%</span>
+<span class="text-[11px] font-mono text-outline">3,512 tickets</span>
+</div>
+<!-- Bar -->
+<div class="w-full bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-primary h-full rounded" style="width: 71.8%"></div>
+</div>
+</div>
+<!-- Metric 3 & 4: Split Cards -->
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2.5 bg-surface-container-lowest border border-outline-variant rounded flex flex-col gap-1">
+<div class="text-[11px] font-headline text-on-surface-variant leading-tight">% Human Review</div>
+<div class="text-lg font-headline font-bold text-on-surface">22.6%</div>
+<div class="text-[10px] font-mono text-outline">1,106 queued</div>
+</div>
+<div class="p-2.5 bg-surface-container-lowest border border-outline-variant rounded flex flex-col gap-1">
+<div class="text-[11px] font-headline text-on-surface-variant leading-tight">% Spam Quarantined</div>
+<div class="text-lg font-headline font-bold text-error">5.6%</div>
+<div class="text-[10px] font-mono text-outline">274 filtered</div>
+</div>
+</div>
+<!-- Routing Distribution Breakdown -->
+<div class="p-3 bg-surface-container-lowest border border-outline-variant rounded flex flex-col gap-2">
+<div class="font-headline text-[11px] font-semibold text-on-surface uppercase tracking-wider">
+            Route Distribution
+          </div>
+<div class="flex flex-col gap-2 text-xs">
+<!-- it_access -->
+<div class="flex flex-col gap-0.5">
+<div class="flex justify-between text-[11px]">
+<span class="font-mono text-on-surface">it_access</span>
+<span class="text-outline font-mono">42.8%</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 42.8%"></div>
+</div>
+</div>
+<!-- bug_report -->
+<div class="flex flex-col gap-0.5">
+<div class="flex justify-between text-[11px]">
+<span class="font-mono text-on-surface">bug_report</span>
+<span class="text-outline font-mono">29.1%</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 29.1%"></div>
+</div>
+</div>
+<!-- billing -->
+<div class="flex flex-col gap-0.5">
+<div class="flex justify-between text-[11px]">
+<span class="font-mono text-on-surface">billing</span>
+<span class="text-outline font-mono">18.4%</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 18.4%"></div>
+</div>
+</div>
+<!-- hr_policy -->
+<div class="flex flex-col gap-0.5">
+<div class="flex justify-between text-[11px]">
+<span class="font-mono text-on-surface">hr_policy</span>
+<span class="text-outline font-mono">9.7%</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full" style="width: 9.7%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Model Calibration Banner -->
+<div class="p-3 bg-surface-container border border-outline-variant rounded flex flex-col gap-1 text-xs">
+<div class="flex items-center gap-1.5 font-headline font-semibold text-on-surface">
+<span class="material-symbols-outlined text-[15px] text-primary">verified</span>
+<span>Model Calibration</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-relaxed">
+          Confidence threshold set at <span class="font-mono font-semibold text-on-surface">0.85</span> for automatic dispatch. Any score beneath triggers human review.
+        </p>
+<div class="mt-1 pt-1 border-t border-outline-variant flex justify-between items-center text-[10px] text-outline font-mono">
+<span>Drift Index: 0.012 (Nominal)</span>
+<a class="text-primary hover:underline" href="#">Adjust</a>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

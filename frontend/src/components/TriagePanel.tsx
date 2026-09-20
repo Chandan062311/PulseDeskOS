@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ApiError, SAMPLES, postTriage, type TicketInput, type TriageResult } from "../api";
 import { Chip, EmptyState, ErrorBanner, LoadingRow, Meter, Section, actionTone } from "./ui";
 
@@ -18,15 +18,24 @@ export default function TriagePanel({
   ticket,
   setTicket,
   onReviewed,
+  initialTriage = null,
 }: {
   ticket: TicketInput;
   setTicket: (t: TicketInput) => void;
   onReviewed: (item: ReviewItem) => void;
+  initialTriage?: TriageResult | null;
 }) {
-  const [triage, setTriage] = useState<TriageResult | null>(null);
-  const [mode, setMode] = useState<string>("idle");
+  const [triage, setTriage] = useState<TriageResult | null>(initialTriage);
+  const [mode, setMode] = useState<string>(initialTriage ? "inspected ticket" : "idle");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialTriage) {
+      setTriage(initialTriage);
+      setMode("inspected ticket");
+    }
+  }, [initialTriage]);
 
   async function run(live: boolean) {
     setLoading(true);
@@ -55,6 +64,7 @@ export default function TriagePanel({
   }
 
   const valid = ticket.message.trim().length > 0 && ticket.sender.trim().length > 0;
+  const isOfflineMock = mode.toLowerCase().includes("offline mock");
 
   return (
     <div className="grid">
@@ -107,7 +117,18 @@ export default function TriagePanel({
                 <td>{s.id}</td>
                 <td>{s.subject}</td>
                 <td>
-                  <button className="ghost" onClick={() => setTicket({ subject: s.subject, message: s.message, sender: s.sender, plan: "enterprise", openOrders: "" })}>
+                  <button
+                    className="ghost"
+                    onClick={() =>
+                      setTicket({
+                        subject: s.subject,
+                        message: s.message,
+                        sender: s.sender,
+                        plan: "enterprise",
+                        openOrders: "",
+                      })
+                    }
+                  >
                     Load
                   </button>
                 </td>
@@ -125,14 +146,22 @@ export default function TriagePanel({
         )}
         {triage && !loading && !error && (
           <div aria-live="polite">
-            <div className="row">
-              <strong>{triage.route}</strong>
+            <div className="row" style={{ marginBottom: "12px", alignItems: "center" }}>
+              <strong style={{ fontSize: "1.1rem" }}>{triage.route}</strong>
               <Chip tone={actionTone(triage.action)}>{triage.action}</Chip>
+              {isOfflineMock && (
+                <span className="chip chip-warn" title="Result produced by offline mock heuristic">
+                  offline mock
+                </span>
+              )}
             </div>
             {BARS.map(({ key, label }) => (
               <Meter key={key} label={label} value={triage[key]} />
             ))}
-            <p className="muted">{triage.reason}</p>
+            <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--info-bg)", borderRadius: "var(--radius)" }}>
+              <div className="muted small" style={{ fontWeight: 600, marginBottom: "2px" }}>Triage Reason:</div>
+              <p style={{ margin: 0, fontSize: "13px" }}>{triage.reason}</p>
+            </div>
           </div>
         )}
       </Section>

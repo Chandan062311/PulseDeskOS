@@ -14,7 +14,8 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
     setLoading(true);
     setError(null);
     try {
-      setOrch(await postOrchestrate(ticket));
+      const result = await postOrchestrate(ticket);
+      setOrch(result);
       setStatus("live pipeline");
     } catch (e) {
       setError(e instanceof Error ? e.message : "unknown error");
@@ -23,6 +24,8 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
       setLoading(false);
     }
   }
+
+  const capturedId = orch?.captured_id || orch?.captured_memory_id;
 
   return (
     <div className="stack">
@@ -49,12 +52,16 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
                 <span>
                   {orch.triage.route} <Chip tone={orch.triage.action === "auto_route" ? "ok" : orch.triage.action === "quarantine_spam" ? "bad" : "warn"}>{orch.triage.action}</Chip>
                 </span>
-                <span className="muted">conf {orch.triage.route_confidence.toFixed(2)} · spam {orch.triage.spam_risk.toFixed(2)} · needs_memory {orch.triage.needs_memory.toFixed(2)}</span>
+                <span className="muted">
+                  conf {orch.triage.route_confidence.toFixed(2)} · spam {orch.triage.spam_risk.toFixed(2)} · needs_memory {orch.triage.needs_memory.toFixed(2)}
+                </span>
               </li>
               <li>
                 <strong>2 · Recall</strong>
                 <span>{orch.memory_hits.length} hit{orch.memory_hits.length === 1 ? "" : "s"}</span>
-                <span className="muted">{orch.memory_hits.length > 0 ? "needs_memory met threshold (0.60)" : "skipped — needs_memory below threshold"}</span>
+                <span className="muted">
+                  {orch.memory_hits.length > 0 ? "needs_memory met threshold (0.60)" : "skipped — needs_memory below threshold"}
+                </span>
               </li>
               <li>
                 <strong>3 · Dispatch</strong>
@@ -71,6 +78,12 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
               </li>
             </ol>
             <p className="muted sr-note">Stages: {STAGES.join(" → ")}</p>
+
+            {capturedId && (
+              <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--info-bg)", borderRadius: "var(--radius)" }}>
+                <strong>Captured Memory ID:</strong> <code>{capturedId}</code>
+              </div>
+            )}
           </Section>
 
           <div className="grid">
@@ -84,20 +97,25 @@ export default function PipelinePanel({ ticket }: { ticket: TicketInput }) {
                 <table>
                   <thead>
                     <tr>
-                      <th scope="col">ID</th>
-                      <th scope="col">Text</th>
+                      <th scope="col">ID / Type</th>
+                      <th scope="col">Evidence Text</th>
                       <th scope="col">Rel</th>
-                      <th scope="col">Flags</th>
+                      <th scope="col">Safety Flags</th>
                     </tr>
                   </thead>
                   <tbody>
                     {orch.memory_hits.map((h) => (
                       <tr key={h.id}>
-                        <td>{h.id.slice(0, 8)}</td>
-                        <td>{h.text}</td>
-                        <td>{h.relevance.toFixed(2)}</td>
-                        <td className="muted">
-                          contra {h.contradicts.toFixed(2)} · inj {h.has_injection.toFixed(2)}
+                        <td>
+                          <div><code>{h.id.slice(0, 8)}</code></div>
+                          <Chip tone="info">{h.type || "doc"}</Chip>
+                        </td>
+                        <td style={{ fontSize: "12px", maxWidth: "260px" }}>{h.text}</td>
+                        <td><strong>{h.relevance.toFixed(2)}</strong></td>
+                        <td className="muted small">
+                          <div>contra: {h.contradicts.toFixed(2)}</div>
+                          <div>inj: {h.has_injection.toFixed(2)}</div>
+                          <div>pii: {h.has_pii.toFixed(2)}</div>
                         </td>
                       </tr>
                     ))}
