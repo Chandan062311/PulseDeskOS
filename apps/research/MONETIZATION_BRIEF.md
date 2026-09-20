@@ -2,7 +2,7 @@
 
 Supervised run 2026-09-20: 3 scout angles → Jev-routed, Jev-verified (2 escalations
 resolved by supervisor; see Verdicts). Figures are scout-reported with linked
-sources in `work/S1-pricing.md`, `work/S2-models.md`, `work/S3-buyers.md` —
+sources in the original working files (archived out of the public tree) —
 **spot-check URLs before quoting externally.**
 
 ## Recommendation

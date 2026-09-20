@@ -46,8 +46,9 @@ suggested follow-ups, and act on the accepted ones via `edit_screens`
 
 ## Step 3 — Export + wire (screens must WORK, not just look right)
 
-1. Download each final screen's HTML + screenshot into `frontend/stitch/`
-   (`inbox.html`, `triage-detail.html`, `review-queue.html`, plus `.png`s).
+1. Download each final screen's HTML into `frontend/stitch/`
+   (`inbox.html`, `triage-detail.html`, `review-queue.html`). Screenshots stay
+   out of git — capture locally for review, never commit binaries.
 2. Wire the live data contract (read-only): backend base = `VITE_API` env or
    `http://localhost:8000`. No app auth header exists — single-key model, only
    the server-side Jev key matters.

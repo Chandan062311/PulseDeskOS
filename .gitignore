@@ -9,3 +9,4 @@ node_modules/
 backups/
 *-wal
 *-shm
+frontend/stitch/*.png
