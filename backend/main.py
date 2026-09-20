@@ -26,7 +26,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from .handlers import builtins as _builtins  # noqa: F401  (side-effect registration)
-from .jev_client import load_config
+from .jev_client import load_config, require_api_key
 from .memory import recall_live
 from .memory_backends.sqlite import SqliteMemoryBackend
 from .orchestrator import orchestrate_live, seed_default_docs
@@ -263,6 +263,16 @@ def healthz() -> dict[str, str]:
         ``{"status": "ok"}`` when the service is up.
     """
     return {"status": "ok"}
+
+
+@app.get("/v1/status")
+def v1_status() -> dict[str, str]:
+    """Setup status: is live Jev configured? Never exposes the key itself."""
+    try:
+        require_api_key()
+        return {"status": "ok", "jev": "live"}
+    except RuntimeError:
+        return {"status": "ok", "jev": "offline"}
 
 
 @app.post("/v1/triage")

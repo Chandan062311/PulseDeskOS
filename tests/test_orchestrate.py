@@ -327,3 +327,18 @@ def test_rate_limit_429_with_retry_after(monkeypatch) -> None:
     assert limited.status_code == 429
     assert limited.headers.get("retry-after") == "60"
     main_mod._rate_hits.clear()
+
+
+def test_status_reports_jev_mode_without_leaking_key(monkeypatch) -> None:
+    """GET /v1/status answers live/offline and never exposes key material."""
+    from fastapi.testclient import TestClient
+
+    from backend.main import app
+
+    client = TestClient(app)
+    monkeypatch.setenv("TYPESAFE_API_KEY", "abc123")
+    live = client.get("/v1/status").json()
+    assert live == {"status": "ok", "jev": "live"}
+    monkeypatch.delenv("TYPESAFE_API_KEY")
+    offline = client.get("/v1/status").json()
+    assert offline == {"status": "ok", "jev": "offline"}

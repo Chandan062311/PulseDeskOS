@@ -99,6 +99,12 @@ export function getHealth(): Promise<{ status: string }> {
   return req("/healthz");
 }
 
+export type BackendStatus = { status: string; jev: "live" | "offline" };
+
+export function getStatus(): Promise<BackendStatus> {
+  return req("/v1/status");
+}
+
 export function postTriage(t: TicketInput, live: boolean): Promise<TriageResult> {
   return req(`/v1/triage?live=${live ? "true" : "false"}`, {
     method: "POST",

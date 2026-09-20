@@ -2,6 +2,16 @@
 
 Enterprise productivity orchestrator powered by TypeSafe Jev (System One).
 
+## 60-second start (one key, one file)
+
+1. Get a key at **https://console.typesafe.ai/keys**.
+2. Put it in **`pulsedesk-os/.env`** as `TYPESAFE_API_KEY=…` (copy from
+   `.env.example`). This is the ONLY key the app needs.
+3. `make api` (or `uvicorn backend.main:app --port 8000`), then open the
+   System tab in the UI — it shows **Jev: live** when the key works.
+4. No key? Everything still runs: triage uses an offline mock, live routes
+   answer 503 telling you exactly what's missing.
+
 ## Vision
 
 Code owns the workflow. Jev owns the judgments.

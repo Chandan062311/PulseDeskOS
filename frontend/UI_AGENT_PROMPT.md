@@ -61,6 +61,12 @@ suggested follow-ups, and act on the accepted ones via `edit_screens`
 3. If you touch React (`src/`), `npm run build` must pass with zero new
    dependencies unless approved.
 
+## Standing decisions (do not revisit)
+
+- No app auth exists: never add key inputs, token fields, or `X-API-Key`
+  headers — a previous iteration did this and it was removed on purpose.
+  Single-key model: only the server-side Jev key matters.
+
 ## MISSION (the only variable part)
 
 <PASTE YOUR UI TASK HERE — e.g. "Generate + wire the Review Queue screen" or
