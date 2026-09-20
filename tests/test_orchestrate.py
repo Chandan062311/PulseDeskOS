@@ -151,6 +151,28 @@ def test_memory_crud_endpoints(monkeypatch) -> None:
         backend.close()
 
 
+def test_memory_endpoints_reject_blank_tenant_ids(monkeypatch) -> None:
+    """Every tenant-scoped memory endpoint rejects blank identifiers."""
+    from fastapi.testclient import TestClient
+
+    import backend.main as main_mod
+    from backend.memory_backends.sqlite import SqliteMemoryBackend
+
+    backend = SqliteMemoryBackend(":memory:")
+    monkeypatch.setattr(main_mod, "memory_backend", lambda: backend)
+    client = TestClient(app)
+    try:
+        assert (
+            client.post("/v1/memory/store", json={"tenant_id": " ", "text": "x"}).status_code
+            == 422
+        )
+        assert client.post("/v1/memory/seed", params={"tenant_id": ""}).status_code == 422
+        assert client.get("/v1/memory/list", params={"tenant_id": " "}).status_code == 422
+        assert client.get("/v1/memory/count", params={"tenant_id": ""}).status_code == 422
+    finally:
+        backend.close()
+
+
 def test_orchestrate_auto_captures_resolved(monkeypatch) -> None:
     """Auto_route results are stored back as decision memories."""
     from fastapi.testclient import TestClient
@@ -290,6 +312,19 @@ def test_require_api_key_normalizes_paste_artifacts(monkeypatch) -> None:
         raise AssertionError("expected RuntimeError for blank key")
 
 
+def test_require_api_key_rejects_example_placeholder(monkeypatch) -> None:
+    """The documented example value must not enable live mode."""
+    from backend.jev_client import require_api_key
+
+    monkeypatch.setenv("TYPESAFE_API_KEY", "your-key-here")
+    try:
+        require_api_key()
+    except RuntimeError as exc:
+        assert "TYPESAFE_API_KEY is not set" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError for example placeholder")
+
+
 def test_delete_requires_tenant(monkeypatch) -> None:
     """Tenant scoping is mandatory on delete (no unscoped fallback)."""
     from fastapi.testclient import TestClient
@@ -342,3 +377,13 @@ def test_status_reports_jev_mode_without_leaking_key(monkeypatch) -> None:
     monkeypatch.delenv("TYPESAFE_API_KEY")
     offline = client.get("/v1/status").json()
     assert offline == {"status": "ok", "jev": "offline"}
+
+
+def test_status_treats_example_key_as_offline(monkeypatch) -> None:
+    """The documented placeholder must not advertise live Jev mode."""
+    from fastapi.testclient import TestClient
+
+    from backend.main import app
+
+    monkeypatch.setenv("TYPESAFE_API_KEY", "your-key-here")
+    assert TestClient(app).get("/v1/status").json() == {"status": "ok", "jev": "offline"}

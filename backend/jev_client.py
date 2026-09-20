@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+_PLACEHOLDER_API_KEYS = {"your-key-here", "your_key_here", "changeme"}
+
 
 def load_config(path: str = "config.yaml") -> dict[str, Any]:
     """Load tunable thresholds. Keeps magic numbers out of code.
@@ -42,7 +44,7 @@ def require_api_key() -> str:
     """
     raw = os.environ.get("TYPESAFE_API_KEY", "")
     key = raw.strip().strip("\"'")
-    if not key:
+    if not key or key in _PLACEHOLDER_API_KEYS:
         raise RuntimeError(
             "TYPESAFE_API_KEY is not set. Copy .env.example and "
             "create a key at https://console.typesafe.ai/keys"

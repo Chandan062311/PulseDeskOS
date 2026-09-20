@@ -60,6 +60,15 @@ def log_jev_status() -> None:
         logger.warning("jev OFFLINE: TYPESAFE_API_KEY unset — live routes will 503")
 
 
+def _has_valid_api_key() -> bool:
+    """Return whether live Jev calls have a usable configured key."""
+    try:
+        require_api_key()
+    except RuntimeError:
+        return False
+    return True
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup hook: report Jev key posture exactly once (never blocks)."""
@@ -68,21 +77,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="PulseDesk OS", lifespan=lifespan)
-
-# Browser calls from the console (:5173 dev, :8080 prod) are cross-origin.
-# Origins are configurable; same-origin deployments need none of this.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        origin.strip()
-        for origin in os.environ.get(
-            "PULSEDESK_CORS_ORIGINS", "http://localhost:5173,http://localhost:8080"
-        ).split(",")
-        if origin.strip()
-    ],
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type"],
-)
 
 # Browser calls from the console (:5173 dev, :8080 prod) are cross-origin.
 # Origins are configurable; same-origin deployments need none of this.
@@ -209,6 +203,13 @@ def memory_backend() -> SqliteMemoryBackend:
     return SqliteMemoryBackend(os.environ.get("MEMORY_DB", "memory.db"))
 
 
+def _require_tenant_id(tenant_id: str) -> str:
+    """Reject blank tenant identifiers before touching tenant-scoped storage."""
+    if not tenant_id.strip():
+        raise HTTPException(status_code=422, detail="tenant_id must be non-empty.")
+    return tenant_id
+
+
 def _auto_capture_enabled() -> bool:
     """Whether resolved tickets are captured back as decision memories."""
     try:
@@ -250,7 +251,7 @@ async def _triage_request(body: TriageRequest, live: bool) -> TriageResult:
     Returns:
         Composed :class:`TriageResult`.
     """
-    if live and os.environ.get("TYPESAFE_API_KEY"):
+    if live and _has_valid_api_key():
         return await triage_live(body.ticket, body.customer)
     return triage_offline(body.ticket, body.customer, dict(MID_MOCK_ANSWERS))
 
@@ -307,33 +308,35 @@ async def v1_ingest(body: TriageRequest, live: bool = False) -> IngestResponse:
 @app.post("/v1/memory/store")
 def v1_memory_store(body: MemoryStoreRequest) -> dict[str, str]:
     """Store a memory doc for a tenant. Returns the new id."""
+    tenant_id = _require_tenant_id(body.tenant_id)
     if not body.text.strip():
         raise HTTPException(status_code=422, detail="text must be non-empty.")
-    mem_id = memory_backend().store(body.tenant_id, body.text, body.type)
+    mem_id = memory_backend().store(tenant_id, body.text, body.type)
     return {"id": mem_id}
 
 
 @app.post("/v1/memory/seed")
 def v1_memory_seed(tenant_id: str = "default") -> dict[str, int]:
     """Seed default policy docs when the tenant store is empty. Idempotent."""
-    return {"seeded": seed_default_docs(memory_backend(), tenant_id)}
+    return {"seeded": seed_default_docs(memory_backend(), _require_tenant_id(tenant_id))}
 
 
 @app.post("/v1/memory/recall")
 async def v1_memory_recall(body: MemoryRecallRequest, live: bool = True) -> list[MemoryHit]:
     """Recall reranked memory hits. Live Jev only (no offline mode)."""
+    tenant_id = _require_tenant_id(body.tenant_id)
     if not live:
         raise RuntimeError("Memory recall is live-only: retry without live=false.")
-    if not os.environ.get("TYPESAFE_API_KEY"):
+    if not _has_valid_api_key():
         raise RuntimeError("Memory recall needs live Jev: set TYPESAFE_API_KEY.")
-    hits = await recall_live(body.tenant_id, body.query, memory_backend())
+    hits = await recall_live(tenant_id, body.query, memory_backend())
     return hits[: max(body.top_k, 0)]
 
 
 @app.get("/v1/memory/list")
 def v1_memory_list(tenant_id: str = "default", limit: int = 20) -> list[dict[str, str]]:
     """List newest-first memories for a tenant (no Jev call)."""
-    return memory_backend().list(tenant_id, limit)
+    return memory_backend().list(_require_tenant_id(tenant_id), limit)
 
 
 @app.delete("/v1/memory/{mem_id}")
@@ -343,21 +346,19 @@ def v1_memory_delete(mem_id: str, tenant_id: str) -> dict[str, bool]:
     Tenant scoping is mandatory: without it, bare ids were a cross-tenant
     deletion oracle. Mismatches report ``deleted: false`` like a missing id.
     """
-    if not tenant_id.strip():
-        raise HTTPException(status_code=422, detail="tenant_id must be non-empty.")
-    return {"deleted": memory_backend().delete(mem_id, tenant_id)}
+    return {"deleted": memory_backend().delete(mem_id, _require_tenant_id(tenant_id))}
 
 
 @app.get("/v1/memory/count")
 def v1_memory_count(tenant_id: str = "default") -> dict[str, int]:
     """Count memories for a tenant."""
-    return {"count": memory_backend().count(tenant_id)}
+    return {"count": memory_backend().count(_require_tenant_id(tenant_id))}
 
 
 @app.post("/v1/verify")
 async def v1_verify(body: VerifyRequest) -> VerifyResult:
     """Verify a draft reply against evidence. Live Jev; 503 without a key."""
-    if not os.environ.get("TYPESAFE_API_KEY"):
+    if not _has_valid_api_key():
         raise RuntimeError("Verify needs live Jev: set TYPESAFE_API_KEY.")
     return await verify_live(body.reply, body.evidence)
 
@@ -371,7 +372,7 @@ async def v1_orchestrate(body: OrchestrateRequest) -> OrchestrateResponse:
     ``memory.auto_capture_resolved`` is true. Live Jev only; 503
     without an API key.
     """
-    if not os.environ.get("TYPESAFE_API_KEY"):
+    if not _has_valid_api_key():
         raise RuntimeError("Orchestration needs live Jev: set TYPESAFE_API_KEY.")
     if body.seed:
         seed_default_docs(memory_backend(), body.tenant_id)
