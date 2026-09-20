@@ -93,11 +93,14 @@ agents/reviewer.md           # review-queue worker agent
 .mcp.json                    # bundled MCP (5 tools: triage, recall, add, list, verify)
 ```
 
-Test locally, distribute via any marketplace:
+Test locally, install from a marketplace once pushed to GitHub
+(`<owner>/<repo>` below = this repo's GitHub path):
 
 ```bash
-claude --plugin-dir ./pulsedesk-os          # try it: /pulsedesk:triage …
-claude plugin validate ./pulsedesk-os       # ✔ Validation passed
+claude --plugin-dir .                              # try it: /pulsedesk:triage …
+claude plugin validate .                           # ✔ Validation passed
+/plugin marketplace add <owner>/<repo>             # in Claude Code
+/plugin install pulsedesk@pulsedesk-marketplace
 ```
 
 Prerequisite for the MCP server: `pip install -e ".[dev]"` (fastmcp,
@@ -105,12 +108,16 @@ typesafe-sdk) and `TYPESAFE_API_KEY` for live Jev routes.
 
 ## MCP usage (without the plugin)
 
-Expose triage/ingest/recall/verify as MCP tools for Claude and other hosts:
+Five tools (`triage_ticket`, `recall_memory`, `add_memory`, `list_memories`,
+`verify_response`) for any MCP host:
 
 ```bash
-/tmp/opencode/pdvenv/bin/fastmcp run backend/mcp_server.py   # from pulsedesk-os/
-claude mcp add pulsedesk -- /tmp/opencode/pdvenv/bin/fastmcp run "$PWD/backend/mcp_server.py"
+make mcp                                            # stdio server on PATH python
+claude mcp add pulsedesk -- python -m backend.mcp_server   # from repo root
 ```
+
+Cursor / VS Code / Codex: point your MCP config at
+`python -m backend.mcp_server` with cwd = repo root (stdio transport).
 
 `backend/mcp_server.py` wraps the same `Ticket`,
 `TriageResult`, `MemoryHit`, `VerifyResult` schemas (5 tools: triage_ticket,

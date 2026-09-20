@@ -47,7 +47,7 @@ Ops console with sidebar nav (Triage / Pipeline / Review / System):
 
 ## Stitch workflow (production screens)
 
-1. Stitch MCP key lives in `/home/asus/Typesafe/.mcp.json` (server `stitch`).
+1. Stitch MCP key lives in `.mcp.json` at your workspace root (server `stitch`).
 2. Verify connectivity with `ListProjects` before generating anything.
 3. Generate with `GenerateScreenFromText`, `deviceType: DESKTOP`, and the
    design system above.

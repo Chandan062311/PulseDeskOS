@@ -1,0 +1,13 @@
+{
+  "name": "pulsedesk-marketplace",
+  "description": "PulseDesk OS: Jev-supervised support triage + agent orchestration plugin",
+  "owner": { "name": "PulseDesk OS contributors" },
+  "plugins": [
+    {
+      "name": "pulsedesk",
+      "source": "./",
+      "description": "Enterprise support triage + memory orchestration powered by TypeSafe Jev",
+      "version": "0.3.0"
+    }
+  ]
+}

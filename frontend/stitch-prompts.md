@@ -4,7 +4,7 @@ Design system for all three screens: LIGHT mode, Inter headline + Inter body,
 ROUND_EIGHT corners, seed color #2563EB, TONAL_SPOT variant. deviceType:
 DESKTOP.
 
-Note: Stitch MCP key is in `/home/asus/Typesafe/.mcp.json`. Verify via
+Note: the Stitch MCP key lives in `.mcp.json` at your workspace root (server `stitch`). Verify via
 ListProjects before calling GenerateScreenFromText.
 
 ---

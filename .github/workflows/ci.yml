@@ -1,4 +1,5 @@
 name: ci
+# Runs from the pulsedesk-os repo root (this directory is the published repo).
 on: [push, pull_request]
 jobs:
   backend:
@@ -8,12 +9,21 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install pydantic pyyaml pytest ruff mypy fastapi httpx typesafe-sdk fastmcp uvicorn
-      - run: ruff check backend tests
+      - run: ruff check backend tests sandbox
+      - run: ruff format --check backend tests sandbox
       - run: mypy backend
       - run: python -m pytest tests -q
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-secrets.sh .
+      - run: python -m json.tool .claude-plugin/plugin.json > /dev/null
+      - run: python -m json.tool .claude-plugin/marketplace.json > /dev/null
+      - run: python -m json.tool .mcp.json > /dev/null
   frontend:
     runs-on: ubuntu-latest
-    defaults: { run: { working-directory: pulsedesk-os/frontend } }
+    defaults: { run: { working-directory: frontend } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
